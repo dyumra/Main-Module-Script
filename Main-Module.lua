@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 3.01 - Authenticated Interface Edition ]]
+-- [[ 📊 Version: 3.02 - Authenticated Interface Edition ]]
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
@@ -236,7 +236,7 @@ titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextSize = 18
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Text = "DYHUB | V3.01 - Dyumra's Innovations"
+titleLabel.Text = "DYHUB | V3.02 - Dyumra's Innovations"
 titleLabel.ZIndex = 2
 
 local closeButton = Instance.new("TextButton")
