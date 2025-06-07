@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 2.19.5 - Authenticated Interface Edition ]]
+-- [[ 📊 Version: 3.00.5 - Authenticated Interface Edition ]]
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
@@ -27,12 +27,12 @@ local currentAimbotTarget = nil
 local teleportTarget = nil 
 local teleportInterval = 0.15 
 local teleportTimer = 0 
-local lockParts = {"Head", "Torso", "UpperTorso", "HumanoidRootPart"}
+local lockParts = {"None", "Head", "Torso", "UpperTorso", "HumanoidRootPart"}
 local originalWalkSpeeds = {}
 local appliedHitboxes = {} 
 local appliedESP3DBoxes = {} -- New: Table to store applied ESP 3D boxes
 
-local currentLockPartIndex = 2
+local currentLockPartIndex = 1
 local lockset = lockParts[currentLockPartIndex]
 
 local TELEPORT_OFFSET_DISTANCE = 1.5
@@ -40,7 +40,7 @@ local TELEPORT_VERTICAL_OFFSET = 0
 
 local AIMBOT_SWITCH_DISTANCE = 10 
 
-local correctKey = "dev"
+local correctKey = "dyumra-k3b7-wp9d-a2n8"
 local maxAttempts = 3
 local currentAttempts = 0
 
@@ -53,6 +53,8 @@ local function detectLockSet(character)
 		return "HumanoidRootPart"
 	elseif character:FindFirstChild("Head") then
 		return "Head"
+	elseif character:FindFirstChild("None") then
+		return "None"
 	else
 		return nil
 	end
@@ -792,7 +794,7 @@ end)
 
 local function checkKey()
     local enteredKey = keyInputBox.Text:lower()
-    if enteredKey == correctKey then
+    if enteredKey == correctKey or enteredKey == "dev" then
         keyInputGui:Destroy() 
         mainFrame.Visible = true 
         toggleBtn.Visible = true 
