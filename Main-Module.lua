@@ -1,7 +1,8 @@
 -- [[ Open Source Code !!! ]]
+
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 3.00.5 - Authenticated Interface Edition ]]
+-- [[ 📊 Version: 2.18.5 - Authenticated Interface Edition ]]
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
@@ -15,6 +16,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local aimbot = false
 local esp = false
 local espTeamCheck = false 
+local esp3D = false -- New: ESP 3D toggle
+local esp3DTeamCheck = false -- New: ESP 3D team check toggle
 local killAll = false 
 local hitbox = false
 local hitboxSize = 0 
@@ -24,11 +27,12 @@ local currentAimbotTarget = nil
 local teleportTarget = nil 
 local teleportInterval = 0.15 
 local teleportTimer = 0 
-local lockParts = {"Not Set!", "Head", "Torso", "UpperTorso", "HumanoidRootPart"}
+local lockParts = {"Head", "Torso", "UpperTorso", "HumanoidRootPart"}
 local originalWalkSpeeds = {}
 local appliedHitboxes = {} 
+local appliedESP3DBoxes = {} -- New: Table to store applied ESP 3D boxes
 
-local currentLockPartIndex = 1
+local currentLockPartIndex = 2
 local lockset = lockParts[currentLockPartIndex]
 
 local TELEPORT_OFFSET_DISTANCE = 1.5
@@ -36,14 +40,9 @@ local TELEPORT_VERTICAL_OFFSET = 0
 
 local AIMBOT_SWITCH_DISTANCE = 10 
 
-local correctKey = "test" -- key test not working
+local correctKey = "dev"
 local maxAttempts = 3
 local currentAttempts = 0
-
--- New ESP 3D variables
-local esp3D = false
-local esp3DTeamCheck = false
-local esp3DBoxes = {} -- Stores the part boxes for ESP 3D
 
 local function detectLockSet(character)
 	if character:FindFirstChild("Torso") then
@@ -54,8 +53,6 @@ local function detectLockSet(character)
 		return "HumanoidRootPart"
 	elseif character:FindFirstChild("Head") then
 		return "Head"
-	elseif character:FindFirstChild("Not Set!") then
-		return "Not Set!"
 	else
 		return nil
 	end
@@ -94,7 +91,6 @@ end
 
 wait(0.1) 
 
--- Key Input GUI (ไม่เปลี่ยนแปลง)
 local keyInputGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 keyInputGui.Name = "KeyInputGui"
 keyInputGui.ResetOnSpawn = false
@@ -163,7 +159,7 @@ local keySubmitBtn = Instance.new("TextButton")
 keySubmitBtn.Parent = keyFrame
 keySubmitBtn.Size = UDim2.new(0, 140, 0, 40)
 keySubmitBtn.Position = UDim2.new(0.5, 0, 0.5, 45)
-keySubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+keySubmitBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
 keySubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 keySubmitBtn.Font = Enum.Font.GothamBold
 keySubmitBtn.TextSize = 18
@@ -177,14 +173,13 @@ local keySubmitStroke = Instance.new("UIStroke", keySubmitBtn)
 keySubmitStroke.Color = Color3.fromRGB(0, 100, 200)
 keySubmitStroke.Thickness = 2
 
--- Enhanced Main GUI
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "EnhancedAimbotESPGui"
+screenGui.Name = "AimbotESPGui"
 screenGui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 260, 0, 490) -- ปรับขนาดให้ใหญ่ขึ้นเพื่อรองรับปุ่มใหม่
+mainFrame.Size = UDim2.new(0, 260, 0, 490) -- Increased height for new buttons
 mainFrame.Position = UDim2.new(0, 20, 0, 50) 
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BackgroundTransparency = 0
@@ -192,7 +187,7 @@ mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
 mainFrame.AnchorPoint = Vector2.new(0,0)
 mainFrame.Active = true
-mainFrame.Draggable = true -- ทำให้ลากได้
+mainFrame.Draggable = true
 mainFrame.Visible = false 
 
 local corner = Instance.new("UICorner", mainFrame)
@@ -206,23 +201,6 @@ local mainGradient = Instance.new("UIGradient", mainFrame)
 mainGradient.Color = ColorSequence.new(Color3.fromRGB(35, 35, 35), Color3.fromRGB(15, 15, 15))
 mainGradient.Transparency = NumberSequence.new(0.1, 0.1)
 mainGradient.Rotation = 90
-
--- Title Bar for Main GUI
-local titleBar = Instance.new("TextLabel")
-titleBar.Parent = mainFrame
-titleBar.Size = UDim2.new(1, 0, 0, 40)
-titleBar.Position = UDim2.new(0, 0, 0, 0)
-titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-titleBar.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleBar.Font = Enum.Font.GothamBold
-titleBar.TextSize = 18
-titleBar.Text = "Dyumra's Execution Module"
-titleBar.TextXAlignment = Enum.TextXAlignment.Left
-titleBar.TextWrapped = true
-titleBar.Parent = mainFrame
-
-local titlePadding = Instance.new("UIPadding", titleBar)
-titlePadding.PaddingLeft = UDim.new(0, 10)
 
 local toggleBtn = Instance.new("TextButton", screenGui)
 toggleBtn.Size = UDim2.new(0, 60, 0, 30)
@@ -246,16 +224,29 @@ toggleBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = not mainFrame.Visible
 end)
 
--- Function to create stylish buttons
-local function createStyledButton(name, pos, parent)
+local function createHeader(text, yPos, parent)
+    local header = Instance.new("TextLabel")
+    header.Parent = parent
+    header.Size = UDim2.new(1, 0, 0, 25)
+    header.Position = UDim2.new(0, 0, 0, yPos)
+    header.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    header.TextColor3 = Color3.fromRGB(255, 255, 255)
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 16
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.Text = "   " .. text
+    return header
+end
+
+local function createButton(name, pos, parent)
 	local btn = Instance.new("TextButton")
 	btn.Name = name
 	btn.Size = UDim2.new(0, 230, 0, 35)
 	btn.Position = pos
-	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50) -- Darker gray
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
 	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 16 -- Slightly smaller text for more buttons
+	btn.TextSize = 18
 	btn.Text = name .. ": Off"
 	btn.AnchorPoint = Vector2.new(0, 0)
 	btn.Parent = parent
@@ -264,22 +255,21 @@ local function createStyledButton(name, pos, parent)
 	corner.CornerRadius = UDim.new(0, 10)
 
     local stroke = Instance.new("UIStroke", btn)
-    stroke.Color = Color3.fromRGB(70, 70, 70) -- Slightly lighter gray for stroke
+    stroke.Color = Color3.fromRGB(65, 65, 65)
     stroke.Thickness = 1
 
 	return btn
 end
 
--- Function to create stylish text boxes
-local function createStyledTextBox(name, pos, parent, placeholder, initialValue)
+local function createTextBox(name, pos, parent, placeholder, initialValue)
 	local box = Instance.new("TextBox")
 	box.Name = name
 	box.Size = UDim2.new(0, 230, 0, 30)
 	box.Position = pos
-	box.BackgroundColor3 = Color3.fromRGB(55, 55, 55) -- Slightly lighter gray for input
+	box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	box.TextColor3 = Color3.fromRGB(200,200,200)
 	box.Font = Enum.Font.GothamBold
-	box.TextSize = 16
+	box.TextSize = 18
 	box.PlaceholderText = placeholder or ""
 	box.Text = tostring(initialValue or "")
 	box.ClearTextOnFocus = false
@@ -290,165 +280,59 @@ local function createStyledTextBox(name, pos, parent, placeholder, initialValue)
 	corner.CornerRadius = UDim.new(0, 8)
 
     local stroke = Instance.new("UIStroke", box)
-    stroke.Color = Color3.fromRGB(80, 80, 80) -- Slightly lighter gray for stroke
+    stroke.Color = Color3.fromRGB(65, 65, 65)
     stroke.Thickness = 1
 	return box
 end
 
--- Section Title Helper Function
-local function createSectionTitle(text, yPos, parent)
-    local title = Instance.new("TextLabel")
-    title.Parent = parent
-    title.Size = UDim2.new(1, -30, 0, 25)
-    title.Position = UDim2.new(0, 15, 0, yPos)
-    title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    title.TextColor3 = Color3.fromRGB(150, 200, 255) -- Light blue for titles
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 16
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Text = text
-    title.Parent = parent
-    return title
-end
+-- GUI Elements Reorganized
+local currentY = 15
 
--- --- GUI Elements ---
-local currentYPos = 50 -- Start position after title bar
+local combatHeader = createHeader("Combat Settings", currentY, mainFrame)
+currentY = currentY + combatHeader.Size.Y.Offset + 10
 
--- Aimbot Section
-createSectionTitle("Aimbot Settings:", currentYPos, mainFrame)
-currentYPos = currentYPos + 30
-local aimbotBtn = createStyledButton("Aimbot", UDim2.new(0, 15, 0, currentYPos), mainFrame)
-currentYPos = currentYPos + 45
-local lockBtn = createStyledButton("Target Lock", UDim2.new(0, 15, 0, currentYPos), mainFrame)
-currentYPos = currentYPos + 45
+local aimbotBtn = createButton("Aimbot", UDim2.new(0, 15, 0, currentY), mainFrame)
+currentY = currentY + aimbotBtn.Size.Y.Offset + 10
 
--- ESP Section
-createSectionTitle("ESP Options:", currentYPos, mainFrame)
-currentYPos = currentYPos + 30
-local espBtn = createStyledButton("ESP (Outline)", UDim2.new(0, 15, 0, currentYPos), mainFrame)
-currentYPos = currentYPos + 45
-local espTeamBtn = createStyledButton("ESP (Outline) Team Filter", UDim2.new(0, 15, 0, currentYPos), mainFrame) 
-currentYPos = currentYPos + 45
-local esp3DBtn = createStyledButton("ESP 3D (Box)", UDim2.new(0, 15, 0, currentYPos), mainFrame)
-currentYPos = currentYPos + 45
-local esp3DTeamBtn = createStyledButton("ESP 3D (Box) Team Filter", UDim2.new(0, 15, 0, currentYPos), mainFrame)
-currentYPos = currentYPos + 45
+local lockBtn = createButton("Target Lock", UDim2.new(0, 15, 0, currentY), mainFrame)
+currentY = currentY + lockBtn.Size.Y.Offset + 10
 
--- Hitbox Section
-createSectionTitle("Hitbox Enhancements:", currentYPos, mainFrame)
-currentYPos = currentYPos + 30
-local hitboxBtn = createStyledButton("Hitbox Enhancement", UDim2.new(0, 15, 0, currentYPos), mainFrame)
-currentYPos = currentYPos + 45
-local hitboxInput = createStyledTextBox("HitboxSizeInput", UDim2.new(0, 15, 0, currentYPos), mainFrame, "ขนาด Hitbox (0-300)", hitboxSize) 
-currentYPos = currentYPos + 40
-local hitboxTransparencyInput = createStyledTextBox("HitboxTransparencyInput", UDim2.new(0, 15, 0, currentYPos), mainFrame, "ความโปร่งใส (0.0-1.0)", hitboxTransparency) 
-currentYPos = currentYPos + 40
-local teamCheckHitboxBtn = createStyledButton("Hitbox Team Filter", UDim2.new(0, 15, 0, currentYPos), mainFrame) 
-currentYPos = currentYPos + 45
+local teleportLoopBtn = createButton("Teleport Loop", UDim2.new(0, 15, 0, currentY), mainFrame) 
+currentY = currentY + teleportLoopBtn.Size.Y.Offset + 20
 
--- Teleport Section
-createSectionTitle("Teleport Features:", currentYPos, mainFrame)
-currentYPos = currentYPos + 30
-local teleportLoopBtn = createStyledButton("Teleport Loop (Kill All)", UDim2.new(0, 15, 0, currentYPos), mainFrame) 
-currentYPos = currentYPos + 45
+local visualHeader = createHeader("Visual Enhancements", currentY, mainFrame)
+currentY = currentY + visualHeader.Size.Y.Offset + 10
 
--- --- End GUI Elements ---
+local espBtn = createButton("Player ESP", UDim2.new(0, 15, 0, currentY), mainFrame)
+currentY = currentY + espBtn.Size.Y.Offset + 10
 
-local highlights = {} -- For original ESP (outline)
+local espTeamBtn = createButton("Player ESP: Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame) 
+currentY = currentY + espTeamBtn.Size.Y.Offset + 10
 
--- --- ESP 3D Functions ---
-local function createESP3DBox(targetCharacter)
-    local box = Instance.new("Part")
-    box.Name = "ESP3DBox_" .. targetCharacter.Name
-    box.Parent = workspace
-    box.Transparency = 0.7 -- Adjust as needed
-    box.BrickColor = BrickColor.new("Really red") -- Red color for non-team players
-    box.CanCollide = false
-    box.Anchored = true
-    box.Material = Enum.Material.Neon
-    box.FormFactor = Enum.FormFactor.Symmetric
-    box.Size = Vector3.new(3, 6, 1.5) -- Default size for a humanoid box
+local esp3DBtn = createButton("ESP 3D", UDim2.new(0, 15, 0, currentY), mainFrame) -- New ESP 3D button
+currentY = currentY + esp3DBtn.Size.Y.Offset + 10
 
-    -- Weld the box to the HumanoidRootPart for movement
-    local weld = Instance.new("WeldConstraint")
-    weld.Parent = box
-    weld.Part0 = box
-    weld.Part1 = targetCharacter:WaitForChild("HumanoidRootPart")
+local esp3DTeamBtn = createButton("ESP 3D: Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame) -- New ESP 3D Team filter button
+currentY = currentY + esp3DTeamBtn.Size.Y.Offset + 20
 
-    -- Add a BillboardGui for player name (optional)
-    local billboardGui = Instance.new("BillboardGui")
-    billboardGui.Size = UDim2.new(0, 100, 0, 20)
-    billboardGui.ExtentsOffset = Vector3.new(0, 3, 0) -- Above the box
-    billboardGui.AlwaysOnTop = true
-    billboardGui.Parent = box
+local hitboxHeader = createHeader("Hitbox Modifiers", currentY, mainFrame)
+currentY = currentY + hitboxHeader.Size.Y.Offset + 10
 
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Parent = billboardGui
-    nameLabel.Size = UDim2.new(1, 0, 1, 0)
-    nameLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    nameLabel.BackgroundTransparency = 0.8
-    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    nameLabel.TextScaled = true
-    nameLabel.TextWrapped = true
-    nameLabel.Font = Enum.Font.SourceSansBold
-    nameLabel.Text = targetCharacter.Name
-    
-    return box
-end
+local hitboxBtn = createButton("Hitbox Enhancement", UDim2.new(0, 15, 0, currentY), mainFrame)
+currentY = currentY + hitboxBtn.Size.Y.Offset + 10
 
-local function updateESP3DBoxes()
-    -- Clean up removed players
-    for plr, box in pairs(esp3DBoxes) do
-        if not Players:FindFirstChild(plr.Name) or not plr.Character or not plr.Character.Parent or not box.Parent then
-            if box.Parent then box:Destroy() end
-            esp3DBoxes[plr] = nil
-        end
-    end
+local hitboxInput = createTextBox("HitboxSizeInput", UDim2.new(0, 15, 0, currentY), mainFrame, "Hitbox Size (0-300)", hitboxSize) 
+currentY = currentY + hitboxInput.Size.Y.Offset + 5
 
-    -- Create or update boxes for current players
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr == player then continue end -- ไม่ต้อง ESP ตัวเอง
+local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", UDim2.new(0, 15, 0, currentY), mainFrame, "Transparency (0.0-1.0)", hitboxTransparency) 
+currentY = currentY + hitboxTransparencyInput.Size.Y.Offset + 10
 
-        local shouldHighlight = esp3D and (not esp3DTeamCheck or (player.Team and plr.Team and plr.Team ~= player.Team) or (not player.Team or not plr.Team))
+local teamCheckHitboxBtn = createButton("Hitbox Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame) 
+currentY = currentY + teamCheckHitboxBtn.Size.Y.Offset + 10
 
-        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            if not esp3DBoxes[plr] and shouldHighlight then
-                local box = createESP3DBox(plr.Character)
-                esp3DBoxes[plr] = box
-            elseif esp3DBoxes[plr] and not shouldHighlight then
-                esp3DBoxes[plr]:Destroy()
-                esp3DBoxes[plr] = nil
-            elseif esp3DBoxes[plr] and shouldHighlight then
-                -- Update box properties (e.g., color for team check)
-                local box = esp3DBoxes[plr]
-                local isTeamMate = player.Team and plr.Team and player.Team == plr.Team
-                if isTeamMate then
-                    box.BrickColor = BrickColor.new("Institutional white") -- White for teammates
-                else
-                    box.BrickColor = BrickColor.new("Really red") -- Red for enemies
-                end
-                -- Update position if not using WeldConstraint (but WeldConstraint is better)
-                -- box.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0,0.5,0)
-            end
-        else -- Player character not found or died
-            if esp3DBoxes[plr] then
-                esp3DBoxes[plr]:Destroy()
-                esp3DBoxes[plr] = nil
-            end
-        end
-    end
-end
 
-local function clearAllESP3DBoxes()
-    for plr, box in pairs(esp3DBoxes) do
-        if box.Parent then
-            box:Destroy()
-        end
-        esp3DBoxes[plr] = nil
-    end
-end
+local highlights = {}
 
--- --- Original ESP (Outline) Functions ---
 local function updateHighlights()
 	for plr, highlight in pairs(highlights) do
 		if not Players:FindFirstChild(plr.Name) or not plr.Character or not plr.Character.Parent then
@@ -475,7 +359,7 @@ local function updateHighlights()
 		if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
 			if not highlights[plr] then
 				local highlight = Instance.new("Highlight")
-				highlight.Parent = player.PlayerGui -- highlight should be in PlayerGui
+				highlight.Parent = player.PlayerGui
 				highlight.Adornee = plr.Character
 				highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 				highlight.Enabled = esp 
@@ -496,6 +380,68 @@ local function updateHighlights()
 	end
 end
 
+local function applyESP3DBox(p)
+    if esp3D and p ~= player and p.Character then
+        if esp3DTeamCheck and player.Team and p.Team and p.Team == player.Team then
+            if appliedESP3DBoxes[p] then
+                appliedESP3DBoxes[p]:Destroy()
+                appliedESP3DBoxes[p] = nil
+            end
+            return 
+        end
+
+        local rootPart = p.Character:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            if not appliedESP3DBoxes[p] then
+                local box = Instance.new("Part")
+                box.Name = "ESP3DBox"
+                box.Size = Vector3.new(3, 7, 1) -- A reasonable size for a player box
+                box.Transparency = 0.6
+                box.BrickColor = BrickColor.new("Really red")
+                box.CanCollide = false
+                box.Anchored = true
+                box.Parent = workspace.CurrentCamera -- Parent to camera to always be visible (client-side)
+                
+                -- Create a Weld to keep the box attached to the player's HumanoidRootPart
+                local weld = Instance.new("WeldConstraint")
+                weld.Parent = box
+                weld.Part0 = box
+                weld.Part1 = rootPart
+                
+                box.CFrame = rootPart.CFrame -- Initial position
+
+                appliedESP3DBoxes[p] = box
+
+            else
+                -- If box exists, just update its properties in case transparency/color changed
+                appliedESP3DBoxes[p].Transparency = 0.6
+                appliedESP3DBoxes[p].BrickColor = BrickColor.new("Really red")
+            end
+        end
+    end
+end
+
+local function removeESP3DBox(p)
+    if appliedESP3DBoxes[p] then
+        appliedESP3DBoxes[p]:Destroy()
+        appliedESP3DBoxes[p] = nil
+    end
+end
+
+local function updateESP3DBoxes()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player then
+            if esp3D and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                applyESP3DBox(p)
+            else
+                removeESP3DBox(p)
+            end
+        else
+            removeESP3DBox(p) -- Ensure local player's box is removed
+        end
+    end
+end
+
 local function isTargetVisible(targetPlayer, targetPart)
     if not targetPlayer or not targetPlayer.Character or not targetPart then return false end
 
@@ -513,25 +459,27 @@ local function isTargetVisible(targetPlayer, targetPart)
     return false
 end
 
--- Adjusted getClosestVisibleTarget for Aimbot team check
 local function getClosestVisibleTarget()
 	local closestDist = math.huge
 	local closestPlayer = nil
 	for _, plr in pairs(Players:GetPlayers()) do
 		if plr ~= player and plr.Character and plr.Character:FindFirstChild(lockset) and plr.Character:FindFirstChild("Humanoid") then
+			-- Aimbot: Exclude teammates if player has a team
+            if player.Team and plr.Team and plr.Team == player.Team then
+                continue 
+            end
+
 			local humanoid = plr.Character.Humanoid
 			if humanoid.Health > 0 then
-                -- Aimbot Team Check: Aim at everyone if no team, or at non-team players if on a team
-                if (not player.Team) or (player.Team and plr.Team and plr.Team ~= player.Team) or (player.Team and not plr.Team) then
-                    local targetPart = plr.Character[lockset]
-                    if isTargetVisible(plr, targetPart) then
-                        local origin = Camera.CFrame.Position
-                        local targetPos = targetPart.Position
-                        local dist = (origin - targetPos).Magnitude
-                        if dist < closestDist then
-                            closestDist = dist
-                            closestPlayer = plr
-                        end
+                local targetPart = plr.Character[lockset]
+                if isTargetVisible(plr, targetPart) then
+                    local origin = Camera.CFrame.Position
+                    local targetPos = targetPart.Position
+                    local dist = (origin - targetPos).Magnitude
+
+                    if dist < closestDist then
+                        closestDist = dist
+                        closestPlayer = plr
                     end
                 end
 			end
@@ -652,15 +600,14 @@ local function updateLockBtn()
 	lockBtn.Text = "Target Lock: " .. (lockset or "None")
 end
 
--- --- Button Click Event Handlers ---
 aimbotBtn.MouseButton1Click:Connect(function()
 	aimbot = not aimbot
 	aimbotBtn.Text = "Aimbot: " .. (aimbot and "On" or "Off")
 	if aimbot then
-		showNotify("Aimbot functionality enabled.")
+		showNotify("Aimbot functionality enabled. Targeting non-team players.")
 		currentAimbotTarget = getClosestVisibleTarget() 
 		if not currentAimbotTarget then
-			showNotify("Aimbot: No immediate targets detected.")
+			showNotify("Aimbot: No immediate valid targets detected.")
 		end
 	else
 		showNotify("Aimbot functionality disabled.")
@@ -670,43 +617,47 @@ end)
 
 espBtn.MouseButton1Click:Connect(function()
 	esp = not esp
-	espBtn.Text = "ESP (Outline): " .. (esp and "On" or "Off")
+	espBtn.Text = "Player ESP: " .. (esp and "On" or "Off")
 	updateHighlights()
-	showNotify(esp and "ESP Display Enabled." or "ESP Display Disabled.")
+	showNotify(esp and "Player ESP Display Enabled." or "Player ESP Display Disabled.")
 end)
 
 espTeamBtn.MouseButton1Click:Connect(function() 
     espTeamCheck = not espTeamCheck
-    espTeamBtn.Text = "ESP (Outline) Team Filter: " .. (espTeamCheck and "On" or "Off")
+    espTeamBtn.Text = "Player ESP: Team Filter: " .. (espTeamCheck and "On" or "Off")
     if espTeamCheck then
-        showNotify("ESP (Outline) Team Filter: Only non-team players highlighted.")
+        showNotify("Player ESP Team Filter: Only non-team players highlighted.")
     else
-        showNotify("ESP (Outline) Team Filter: All players highlighted (excluding self).")
+        showNotify("Player ESP Team Filter: All players highlighted (excluding self).")
     end
     updateHighlights() 
 end)
 
-esp3DBtn.MouseButton1Click:Connect(function()
+esp3DBtn.MouseButton1Click:Connect(function() -- New ESP 3D toggle handler
     esp3D = not esp3D
-    esp3DBtn.Text = "ESP 3D (Box): " .. (esp3D and "On" or "Off")
+    esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off")
     if esp3D then
-        showNotify("ESP 3D (Box) enabled for external players.")
+        showNotify("ESP 3D enabled. Visual boxes around players.")
         updateESP3DBoxes()
     else
-        showNotify("ESP 3D (Box) disabled. Removing all boxes.")
-        clearAllESP3DBoxes()
+        showNotify("ESP 3D disabled. Removing visual boxes.")
+        for _, p in pairs(Players:GetPlayers()) do
+            removeESP3DBox(p)
+        end
     end
 end)
 
-esp3DTeamBtn.MouseButton1Click:Connect(function()
+esp3DTeamBtn.MouseButton1Click:Connect(function() -- New ESP 3D Team Filter handler
     esp3DTeamCheck = not esp3DTeamCheck
-    esp3DTeamBtn.Text = "ESP 3D (Box) Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
+    esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
     if esp3DTeamCheck then
-        showNotify("ESP 3D (Box) Team Filter enabled: Affects non-team players only.")
+        showNotify("ESP 3D Team Filter enabled: Affects non-team players only.")
     else
-        showNotify("ESP 3D (Box) Team Filter disabled: Affects all players.")
+        showNotify("ESP 3D Team Filter disabled: Affects all players.")
     end
-    updateESP3DBoxes() -- Update immediately to reflect filter change
+    if esp3D then
+        updateESP3DBoxes()
+    end
 end)
 
 lockBtn.MouseButton1Click:Connect(function()
@@ -721,7 +672,7 @@ end)
 
 teleportLoopBtn.MouseButton1Click:Connect(function() 
 	killAll = not killAll 
-	teleportLoopBtn.Text = "Teleport Loop (Kill All): " .. (killAll and "On" or "Off") 
+	teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off") 
 
 	if killAll then
 		teleportTarget = getRandomLivingTarget() 
@@ -800,23 +751,26 @@ end)
 
 local function setupGUIAndDefaults()
     updateLockBtn()
-    espTeamBtn.Text = "ESP (Outline) Team Filter: " .. (espTeamCheck and "On" or "Off") 
-    esp3DBtn.Text = "ESP 3D (Box): " .. (esp3D and "On" or "Off")
-    esp3DTeamBtn.Text = "ESP 3D (Box) Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
+    espTeamBtn.Text = "Player ESP: Team Filter: " .. (espTeamCheck and "On" or "Off") 
+    esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off") -- Set initial text for ESP 3D
+    esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off") -- Set initial text for ESP 3D Team Filter
     teamCheckHitboxBtn.Text = "Hitbox Team Filter: " .. (teamCheckHitbox and "On" or "Off")
-    teleportLoopBtn.Text = "Teleport Loop (Kill All): " .. (killAll and "On" or "Off") 
+    teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off") 
 end
 
--- Player Added/Removing Handlers
 Players.PlayerAdded:Connect(function(newPlayer)
     newPlayer.CharacterAdded:Connect(function(char)
         if hitbox then
             applyHitboxToPlayer(newPlayer)
         end
-        -- Auto-ESP for new players if enabled
-        if esp then updateHighlights() end
-        if esp3D then updateESP3DBoxes() end
+        if esp3D then -- New: Apply ESP 3D when new player character added
+            applyESP3DBox(newPlayer)
+        end
     end)
+    -- Initial ESP 3D update for newly added player if esp3D is active
+    if esp3D then
+        applyESP3DBox(newPlayer)
+    end
 end)
 
 Players.PlayerRemoving:Connect(function(leavingPlayer)
@@ -826,6 +780,7 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
     if appliedHitboxes[leavingPlayer] then
         appliedHitboxes[leavingPlayer] = nil
     end
+    removeESP3DBox(leavingPlayer) -- New: Remove ESP 3D box when player leaves
 	if currentAimbotTarget == leavingPlayer then
 		currentAimbotTarget = nil
 	end
@@ -833,33 +788,11 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 		teleportTarget = nil 
 	end
     updateHighlights() 
-    if esp3DBoxes[leavingPlayer] then -- Clean up ESP 3D box
-        esp3DBoxes[leavingPlayer]:Destroy()
-        esp3DBoxes[leavingPlayer] = nil
-    end
 end)
 
--- Player character removed (died) handler for ESP 3D
-Players.LocalPlayer.CharacterRemoving:Connect(function(char)
-    -- If the local player's character is removed (e.g., died), ensure ESP boxes are cleared
-    -- This handles cases where you might want to re-enable ESP on respawn
-    -- clearAllESP3DBoxes() -- No, we want it to persist for other players
-end)
-
--- CharacterAdded for player respawn
-Players.LocalPlayer.CharacterAdded:Connect(function(char)
-    -- On respawn, re-apply hitboxes if enabled for other players
-    if hitbox then updateHitboxes() end
-    -- On respawn, re-enable ESP for other players if enabled
-    if esp then updateHighlights() end
-    if esp3D then updateESP3DBoxes() end
-end)
-
-
--- Key authentication logic
 local function checkKey()
     local enteredKey = keyInputBox.Text:lower()
-    if enteredKey == "dyumra-k3b7-wp9d-a2n8" or enteredKey == "dev" then
+    if enteredKey == correctKey then
         keyInputGui:Destroy() 
         mainFrame.Visible = true 
         toggleBtn.Visible = true 
@@ -885,7 +818,6 @@ end)
 
 keySubmitBtn.MouseButton1Click:Connect(checkKey)
 
--- Main game loop (RenderStepped)
 RunService.RenderStepped:Connect(function(dt)
 	if aimbot and lockset and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 		if currentAimbotTarget and currentAimbotTarget.Character and currentAimbotTarget.Character:FindFirstChild(lockset) then
@@ -917,21 +849,19 @@ RunService.RenderStepped:Connect(function(dt)
 		handleTeleportLoop(dt) 
 	end
 
-	-- Update both ESP types if enabled
 	if esp then
 		updateHighlights()
 	end
-    if esp3D then
+    if esp3D then -- New: Update ESP 3D boxes
         updateESP3DBoxes()
     end
 end)
 
 keyInputBox:CaptureFocus() 
-showNotify("Please authenticate your access key to proceed.") [cite: 34]
+showNotify("Please authenticate your access key to proceed.")
 
--- Continuous update loop (for less frequent updates like highlight check)
 while true do
 	wait(1)
 	if mainFrame.Visible and esp then updateHighlights() end
-    if mainFrame.Visible and esp3D then updateESP3DBoxes() end -- Update ESP 3D also
+    if esp3D then updateESP3DBoxes() end -- New: Always update ESP 3D boxes if enabled, regardless of GUI visibility
 end
