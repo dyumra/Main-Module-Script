@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 3.01 - Authenticated Interface Edition ]]
+-- [[ 📊 Version: 3.012 - Authenticated Interface Edition ]]
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
