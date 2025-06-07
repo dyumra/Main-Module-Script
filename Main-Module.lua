@@ -1,7 +1,7 @@
 -- [[ Open Source Code !!! ]]
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 2.18.5 - Authenticated Interface Edition ]]
+-- [[ 📊 Version: 3.00.5 - Authenticated Interface Edition ]]
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
