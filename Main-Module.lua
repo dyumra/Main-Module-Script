@@ -247,22 +247,6 @@ minimizeButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = false
 end)
 
-local closeButton = Instance.new("TextButton")
-closeButton.Parent = headerBar
-closeButton.Size = UDim2.new(0, 30, 1, 0)
-closeButton.Position = UDim2.new(1, -30, 0, 0)
-closeButton.Text = "X"
-closeButton.Font = Enum.Font.GothamBold
-closeButton.TextSize = 18
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0) -- Red color
-closeButton.BorderSizePixel = 0
-closeButton.MouseButton1Click:Connect(function()
-    mainFrame:Destroy() -- Completely close the GUI
-    showNotify("DYHUB interface closed.")
-end)
-
-
 -- Navigation Panel (Left Side)
 local navPanel = Instance.new("Frame")
 navPanel.Parent = mainFrame
