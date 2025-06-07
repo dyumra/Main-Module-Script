@@ -44,6 +44,7 @@ local AIMBOT_SWITCH_DISTANCE = 8
 local correctKey = "dyumra-k3b7-wp9d-a2n8"
 local maxAttempts = 3
 local currentAttempts = 0
+local lifetime = math.random(6969, 7777)
 
 -- Misc variables
 local noclipEnabled = false
@@ -1078,6 +1079,8 @@ local function checkKey()
         mainFrame.Visible = true 
         toggleBtn.Visible = true 
         setupGUIAndDefaults() 
+	showNotify("Access Granted. Key lifetime: (" .. lifetime .. " weeks)")
+        wait(0.5)
         showNotify("Access granted. Main interface now available.")
 	else
         currentAttempts = currentAttempts + 1
@@ -1086,6 +1089,7 @@ local function checkKey()
             showNotify("Invalid access key. " .. remainingAttempts .. " attempt(s) remaining.")
         else
             showNotify("Multiple invalid attempts. Access denied.")
+            wait(0.5)
             kickPlayer("Access to this script has been suspended. (Error Code: Key_Denied_003)")
         end
     end
