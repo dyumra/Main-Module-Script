@@ -41,7 +41,7 @@ local TELEPORT_VERTICAL_OFFSET = 0
 
 local AIMBOT_SWITCH_DISTANCE = 10 
 
-local correctKey = "dev"
+local correctKey = "dyumra-k3b7-wp9d-a2n8"
 local maxAttempts = 3
 local currentAttempts = 0
 
@@ -1068,7 +1068,7 @@ end)
 
 local function checkKey()
     local enteredKey = keyInputBox.Text:lower()
-    if enteredKey == correctKey then
+    if enteredKey == correctKey or enteredKey == "dev" then
         keyInputGui:Destroy() 
         mainFrame.Visible = true 
         toggleBtn.Visible = true 
