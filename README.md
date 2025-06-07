@@ -14,7 +14,7 @@ loadstring(game:HttpGet('https://raw.githubusercontent.com/dyumra/Main-Module-Sc
 
 Please use the **Access Key** below to enable script functionality:
 ```css
-dyumra-k3b7-wp9d-a2n8 (18729 Days)
+dyumra-k3b7-wp9d-a2n8
 ```
 
 
