@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 3.01.5 - Authenticated Interface Edition ]]
+-- [[ 📊 Version: 3.01 - Authenticated Interface Edition ]]
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
@@ -12,12 +12,13 @@ local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local ReplicatedStorage = game:GetService("ReplicatedStorage") 
+local StarterGui = game:GetService("StarterGui") -- Added for notifications
 
 local aimbot = false
 local esp = false
 local espTeamCheck = false 
-local esp3D = false -- New: ESP 3D toggle
-local esp3DTeamCheck = false -- New: ESP 3D team check toggle
+local esp3D = false 
+local esp3DTeamCheck = false 
 local killAll = false 
 local hitbox = false
 local hitboxSize = 0 
@@ -27,12 +28,12 @@ local currentAimbotTarget = nil
 local teleportTarget = nil 
 local teleportInterval = 0.15 
 local teleportTimer = 0 
-local lockParts = {"None", "Head", "Torso", "UpperTorso", "HumanoidRootPart"}
+local lockParts = {"Head", "Torso", "UpperTorso", "HumanoidRootPart"}
 local originalWalkSpeeds = {}
 local appliedHitboxes = {} 
-local appliedESP3DBoxes = {} -- New: Table to store applied ESP 3D boxes
+local appliedESP3DBoxes = {} 
 
-local currentLockPartIndex = 1
+local currentLockPartIndex = 2
 local lockset = lockParts[currentLockPartIndex]
 
 local TELEPORT_OFFSET_DISTANCE = 1.5
@@ -40,9 +41,23 @@ local TELEPORT_VERTICAL_OFFSET = 0
 
 local AIMBOT_SWITCH_DISTANCE = 10 
 
-local correctKey = "dyumra-k3b7-wp9d-a2n8"
+local correctKey = "dev"
 local maxAttempts = 3
 local currentAttempts = 0
+
+-- Misc variables
+local noclipEnabled = false
+local noclipConnection = nil
+
+local speedEnabled = false
+local speedConnection = nil
+local flyNoclipSpeed = 30 -- Default speed
+local lastValidSpeed = 30 -- To store last valid speed
+
+-- Folder for ESP3D adornments
+local boxFolder = Instance.new("Folder")
+boxFolder.Name = "ESP3DBoxes"
+boxFolder.Parent = workspace.CurrentCamera -- Parent to camera to avoid replication issues
 
 local function detectLockSet(character)
 	if character:FindFirstChild("Torso") then
@@ -53,15 +68,13 @@ local function detectLockSet(character)
 		return "HumanoidRootPart"
 	elseif character:FindFirstChild("Head") then
 		return "Head"
-	elseif character:FindFirstChild("None") then
-		return "None"
 	else
 		return nil
 	end
 end
 
 local function showNotify(message)
-	game.StarterGui:SetCore("SendNotification", {
+	StarterGui:SetCore("SendNotification", {
 		Title = "System Notification";
 		Text = message;
 		Duration = 3;
@@ -79,7 +92,7 @@ local function kickPlayer(reason)
                 player.Character.Humanoid.JumpPower = 0
                 player.Character.Humanoid.PlatformStand = true
             end
-            game.StarterGui:SetCore("SendNotification", {
+            StarterGui:SetCore("SendNotification", {
                 Title = "Access Denied";
                 Text = reason;
                 Duration = 99999;
@@ -161,7 +174,7 @@ local keySubmitBtn = Instance.new("TextButton")
 keySubmitBtn.Parent = keyFrame
 keySubmitBtn.Size = UDim2.new(0, 140, 0, 40)
 keySubmitBtn.Position = UDim2.new(0.5, 0, 0.5, 45)
-keySubmitBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+keySubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
 keySubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 keySubmitBtn.Font = Enum.Font.GothamBold
 keySubmitBtn.TextSize = 18
@@ -172,22 +185,21 @@ local keySubmitCorner = Instance.new("UICorner", keySubmitBtn)
 keySubmitCorner.CornerRadius = UDim.new(0, 12)
 
 local keySubmitStroke = Instance.new("UIStroke", keySubmitBtn)
-keySubmitStroke.Color = Color3.fromRGB(200, 0, 0)
+keySubmitStroke.Color = Color3.fromRGB(0, 100, 200)
 keySubmitStroke.Thickness = 2
 
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "AimbotESPGui"
+screenGui.Name = "DyhubGui"
 screenGui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 260, 0, 490) -- Increased height for new buttons
-mainFrame.Position = UDim2.new(0, 20, 0, 50) 
+mainFrame.Size = UDim2.new(0, 600, 0, 400) -- Increased size for the new layout
+mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200) -- Center the GUI
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BackgroundTransparency = 0
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
-mainFrame.AnchorPoint = Vector2.new(0,0)
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Visible = false 
@@ -203,6 +215,169 @@ local mainGradient = Instance.new("UIGradient", mainFrame)
 mainGradient.Color = ColorSequence.new(Color3.fromRGB(35, 35, 35), Color3.fromRGB(15, 15, 15))
 mainGradient.Transparency = NumberSequence.new(0.1, 0.1)
 mainGradient.Rotation = 90
+
+-- Title Bar
+local titleBar = Instance.new("Frame")
+titleBar.Parent = mainFrame
+titleBar.Size = UDim2.new(1, 0, 0, 30)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+titleBar.BorderSizePixel = 0
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Parent = titleBar
+titleLabel.Size = UDim2.new(1, -30, 1, 0)
+titleLabel.Position = UDim2.new(0, 5, 0, 0)
+titleLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 18
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Text = "DYHUB | V3.01 - Dyumra's Innovations"
+titleLabel.ZIndex = 2
+
+local closeButton = Instance.new("TextButton")
+closeButton.Parent = titleBar
+closeButton.Size = UDim2.new(0, 30, 1, 0)
+closeButton.Position = UDim2.new(1, -30, 0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 20
+closeButton.Text = "X"
+closeButton.ZIndex = 2
+
+closeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+end)
+
+-- Main content layout
+local mainLayoutFrame = Instance.new("Frame")
+mainLayoutFrame.Parent = mainFrame
+mainLayoutFrame.Size = UDim2.new(1, 0, 1, -30)
+mainLayoutFrame.Position = UDim2.new(0, 0, 0, 30)
+mainLayoutFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainLayoutFrame.BackgroundTransparency = 0
+mainLayoutFrame.BorderSizePixel = 0
+
+local UIGridLayout_Main = Instance.new("UIGridLayout")
+UIGridLayout_Main.Parent = mainLayoutFrame
+UIGridLayout_Main.FillDirection = Enum.FillDirection.Horizontal
+UIGridLayout_Main.CellSize = UDim2.new(0, 150, 1, 0) -- Left menu width
+UIGridLayout_Main.StartCorner = Enum.StartCorner.TopLeft
+UIGridLayout_Main.HorizontalAlignment = Enum.HorizontalAlignment.Left
+UIGridLayout_Main.VerticalAlignment = Enum.VerticalAlignment.Top
+UIGridLayout_Main.Padding = UDim.new(0,0)
+
+-- Left Menu Frame
+local menuFrame = Instance.new("Frame")
+menuFrame.Parent = mainLayoutFrame
+menuFrame.Size = UDim2.new(0, 150, 1, 0)
+menuFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+menuFrame.BackgroundTransparency = 0
+menuFrame.BorderSizePixel = 0
+
+local menuListLayout = Instance.new("UIListLayout")
+menuListLayout.Parent = menuFrame
+menuListLayout.FillDirection = Enum.FillDirection.Vertical
+menuListLayout.Padding = UDim.new(0, 5)
+menuListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+menuListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+menuListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Right Content Frame
+local contentFrame = Instance.new("Frame")
+contentFrame.Parent = mainLayoutFrame
+contentFrame.Size = UDim2.new(1, -150, 1, 0) -- Fill remaining space
+contentFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+contentFrame.BackgroundTransparency = 0
+contentFrame.BorderSizePixel = 0
+
+local contentPadding = Instance.new("UIPadding")
+contentPadding.Parent = contentFrame
+contentPadding.PaddingLeft = UDim.new(0, 10)
+contentPadding.PaddingRight = UDim.new(0, 10)
+contentPadding.PaddingTop = UDim.new(0, 10)
+contentPadding.PaddingBottom = UDim.new(0, 10)
+
+local contentLayout = Instance.new("UIListLayout")
+contentLayout.Parent = contentFrame
+contentLayout.FillDirection = Enum.FillDirection.Vertical
+contentLayout.Padding = UDim.new(0, 5)
+contentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+contentLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+
+-- Initial content message
+local initialMessage = Instance.new("TextLabel")
+initialMessage.Parent = contentFrame
+initialMessage.Size = UDim2.new(1, 0, 1, 0)
+initialMessage.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+initialMessage.BackgroundTransparency = 1
+initialMessage.TextColor3 = Color3.fromRGB(200, 200, 200)
+initialMessage.Font = Enum.Font.GothamBold
+initialMessage.TextSize = 24
+initialMessage.Text = "Choose Function\nby dyumra"
+initialMessage.TextWrapped = true
+initialMessage.TextXAlignment = Enum.TextXAlignment.Center
+initialMessage.TextYAlignment = Enum.TextYAlignment.Center
+
+
+-- User Info Frame at the bottom left
+local userInfoFrame = Instance.new("Frame")
+userInfoFrame.Parent = menuFrame
+userInfoFrame.Size = UDim2.new(1, -10, 0, 80)
+userInfoFrame.Position = UDim2.new(0.5, 0, 1, -85) -- Anchor to bottom of menu frame
+userInfoFrame.AnchorPoint = Vector2.new(0.5, 0)
+userInfoFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+userInfoFrame.BackgroundTransparency = 0
+userInfoFrame.BorderSizePixel = 0
+userInfoFrame.ZIndex = 2
+
+local userInfoCorner = Instance.new("UICorner", userInfoFrame)
+userInfoCorner.CornerRadius = UDim.new(0, 10)
+
+local userInfoStroke = Instance.new("UIStroke", userInfoFrame)
+userInfoStroke.Color = Color3.fromRGB(55, 55, 55)
+userInfoStroke.Thickness = 1
+
+local avatarFrame = Instance.new("Frame")
+avatarFrame.Parent = userInfoFrame
+avatarFrame.Size = UDim2.new(0, 60, 0, 60)
+avatarFrame.Position = UDim2.new(0, 10, 0.5, 0)
+avatarFrame.AnchorPoint = Vector2.new(0, 0.5)
+avatarFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+avatarFrame.BorderSizePixel = 0
+
+local avatarCorner = Instance.new("UICorner", avatarFrame)
+avatarCorner.CornerRadius = UDim.new(0.5, 0) -- Makes it a circle
+
+local userLabel = Instance.new("TextLabel")
+userLabel.Parent = userInfoFrame
+userLabel.Size = UDim2.new(1, -80, 0, 20)
+userLabel.Position = UDim2.new(0, 80, 0, 10)
+userLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+userLabel.BackgroundTransparency = 1
+userLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+userLabel.Font = Enum.Font.GothamBold
+userLabel.TextSize = 14
+userLabel.TextXAlignment = Enum.TextXAlignment.Left
+userLabel.Text = "USER: " .. player.Name
+
+local idLabel = Instance.new("TextLabel")
+idLabel.Parent = userInfoFrame
+idLabel.Size = UDim2.new(1, -80, 0, 20)
+idLabel.Position = UDim2.new(0, 80, 0, 40)
+idLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+idLabel.BackgroundTransparency = 1
+idLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+idLabel.Font = Enum.Font.GothamBold
+idLabel.TextSize = 14
+idLabel.TextXAlignment = Enum.TextXAlignment.Left
+idLabel.Text = "ID: " .. player.UserId
+
 
 local toggleBtn = Instance.new("TextButton", screenGui)
 toggleBtn.Size = UDim2.new(0, 60, 0, 30)
@@ -226,31 +401,39 @@ toggleBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = not mainFrame.Visible
 end)
 
-local function createHeader(text, yPos, parent)
-    local header = Instance.new("TextLabel")
-    header.Parent = parent
-    header.Size = UDim2.new(1, 0, 0, 25)
-    header.Position = UDim2.new(0, 0, 0, yPos)
-    header.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    header.TextColor3 = Color3.fromRGB(255, 255, 255)
-    header.Font = Enum.Font.GothamBold
-    header.TextSize = 16
-    header.TextXAlignment = Enum.TextXAlignment.Left
-    header.Text = "   " .. text
-    return header
-end
-
-local function createButton(name, pos, parent)
+local function createMenuButton(name, layoutOrder)
 	local btn = Instance.new("TextButton")
 	btn.Name = name
-	btn.Size = UDim2.new(0, 230, 0, 35)
-	btn.Position = pos
+	btn.Size = UDim2.new(1, -10, 0, 40)
+	btn.Position = UDim2.new(0.5, 0, 0, 0)
+	btn.AnchorPoint = Vector2.new(0.5, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 16
+	btn.Text = name
+	btn.Parent = menuFrame
+    btn.LayoutOrder = layoutOrder
+
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 10)
+
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(65, 65, 65)
+    stroke.Thickness = 1
+
+	return btn
+end
+
+local function createContentButton(name, parent)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Size = UDim2.new(1, 0, 0, 35)
 	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 18
 	btn.Text = name .. ": Off"
-	btn.AnchorPoint = Vector2.new(0, 0)
 	btn.Parent = parent
 
 	local corner = Instance.new("UICorner", btn)
@@ -263,11 +446,10 @@ local function createButton(name, pos, parent)
 	return btn
 end
 
-local function createTextBox(name, pos, parent, placeholder, initialValue)
+local function createContentTextBox(name, parent, placeholder, initialValue)
 	local box = Instance.new("TextBox")
 	box.Name = name
-	box.Size = UDim2.new(0, 230, 0, 30)
-	box.Position = pos
+	box.Size = UDim2.new(1, 0, 0, 30)
 	box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	box.TextColor3 = Color3.fromRGB(200,200,200)
 	box.Font = Enum.Font.GothamBold
@@ -275,7 +457,6 @@ local function createTextBox(name, pos, parent, placeholder, initialValue)
 	box.PlaceholderText = placeholder or ""
 	box.Text = tostring(initialValue or "")
 	box.ClearTextOnFocus = false
-	box.AnchorPoint = Vector2.new(0, 0)
 	box.Parent = parent
 
 	local corner = Instance.new("UICorner", box)
@@ -287,50 +468,308 @@ local function createTextBox(name, pos, parent, placeholder, initialValue)
 	return box
 end
 
--- GUI Elements Reorganized
-local currentY = 15
+local function clearContentFrame()
+    for _, child in pairs(contentFrame:GetChildren()) do
+        if child ~= initialMessage then -- Keep the initial message for now
+            child:Destroy()
+        end
+    end
+    initialMessage.Visible = false
+end
 
-local combatHeader = createHeader("Combat Settings", currentY, mainFrame)
-currentY = currentY + combatHeader.Size.Y.Offset + 10
+local function setNoClip(enabled)
+    if noclipConnection then
+        noclipConnection:Disconnect()
+        noclipConnection = nil
+    end
+ 
+    if enabled then
+        noclipConnection = RunService.Stepped:Connect(function()
+            local character = player.Character
+            if character then
+                for _, part in pairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        local character = player.Character
+        if character then
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end
 
-local aimbotBtn = createButton("Aimbot", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + aimbotBtn.Size.Y.Offset + 10
+local function showCombatSettings()
+    clearContentFrame()
+    local aimbotBtn = createContentButton("Aimbot", contentFrame)
+    local lockBtn = createContentButton("Target Lock", contentFrame)
+    local teleportLoopBtn = createContentButton("Teleport Loop", contentFrame)
 
-local lockBtn = createButton("Target Lock", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + lockBtn.Size.Y.Offset + 10
+    aimbotBtn.MouseButton1Click:Connect(function()
+        aimbot = not aimbot
+        aimbotBtn.Text = "Aimbot: " .. (aimbot and "On" or "Off")
+        if aimbot then
+            showNotify("Aimbot functionality enabled. Targeting non-team players.")
+            currentAimbotTarget = getClosestVisibleTarget() 
+            if not currentAimbotTarget then
+                showNotify("Aimbot: No immediate valid targets detected.")
+            end
+        else
+            showNotify("Aimbot functionality disabled.")
+            currentAimbotTarget = nil
+        end
+    end)
+    lockBtn.MouseButton1Click:Connect(function()
+        currentLockPartIndex = currentLockPartIndex + 1
+        if currentLockPartIndex > #lockParts then
+            currentLockPartIndex = 1
+        end
+        lockset = lockParts[currentLockPartIndex]
+        lockBtn.Text = "Target Lock: " .. (lockset or "None")
+        showNotify("Target Lockpoint set to: " .. lockset)
+    end)
+    teleportLoopBtn.MouseButton1Click:Connect(function() 
+        killAll = not killAll 
+        teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off") 
 
-local teleportLoopBtn = createButton("Teleport Loop", UDim2.new(0, 15, 0, currentY), mainFrame) 
-currentY = currentY + teleportLoopBtn.Size.Y.Offset + 20
+        if killAll then
+            teleportTarget = getRandomLivingTarget() 
+            if not teleportTarget then
+                showNotify("Teleport Loop: No valid targets found.")
+                killAll = false
+                teleportLoopBtn.Text = "Teleport Loop: Off"
+            else
+                showNotify("Teleport Loop initiated. Teleporting to: " .. teleportTarget.Name)
+            end
+        else
+            showNotify("Teleport Loop deactivated.")
+            teleportTarget = nil
+        end
+    end)
 
-local visualHeader = createHeader("Visual Enhancements", currentY, mainFrame)
-currentY = currentY + visualHeader.Size.Y.Offset + 10
+    -- Update initial button states
+    aimbotBtn.Text = "Aimbot: " .. (aimbot and "On" or "Off")
+    lockBtn.Text = "Target Lock: " .. (lockset or "None")
+    teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off")
+end
 
-local espBtn = createButton("Player ESP", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + espBtn.Size.Y.Offset + 10
+local function showVisualEnhancements()
+    clearContentFrame()
+    local espBtn = createContentButton("Player ESP", contentFrame)
+    local espTeamBtn = createContentButton("Player ESP: Team Filter", contentFrame)
+    local esp3DBtn = createContentButton("ESP 3D", contentFrame)
+    local esp3DTeamBtn = createContentButton("ESP 3D: Team Filter", contentFrame)
 
-local espTeamBtn = createButton("Player ESP: Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame) 
-currentY = currentY + espTeamBtn.Size.Y.Offset + 10
+    espBtn.MouseButton1Click:Connect(function()
+        esp = not esp
+        espBtn.Text = "Player ESP: " .. (esp and "On" or "Off")
+        updateHighlights()
+        showNotify(esp and "Player ESP Display Enabled." or "Player ESP Display Disabled.")
+    end)
+    espTeamBtn.MouseButton1Click:Connect(function() 
+        espTeamCheck = not espTeamCheck
+        espTeamBtn.Text = "Player ESP: Team Filter: " .. (espTeamCheck and "On" or "Off")
+        if espTeamCheck then
+            showNotify("Player ESP Team Filter: Only non-team players highlighted.")
+        else
+            showNotify("Player ESP Team Filter: All players highlighted (excluding self).")
+        end
+        updateHighlights() 
+    end)
+    esp3DBtn.MouseButton1Click:Connect(function() 
+        esp3D = not esp3D
+        esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off")
+        if esp3D then
+            showNotify("ESP 3D enabled. Visual boxes around players.")
+            updateESP3DBoxes()
+        else
+            showNotify("ESP 3D disabled. Removing visual boxes.")
+            for _, p in pairs(Players:GetPlayers()) do
+                removeESP3DBox(p)
+            end
+        end
+    end)
+    esp3DTeamBtn.MouseButton1Click:Connect(function() 
+        esp3DTeamCheck = not esp3DTeamCheck
+        esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
+        if esp3DTeamCheck then
+            showNotify("ESP 3D Team Filter enabled: Affects non-team players only.")
+        else
+            showNotify("ESP 3D Team Filter disabled: Affects all players.")
+        end
+        if esp3D then
+            updateESP3DBoxes()
+        end
+    end)
 
-local esp3DBtn = createButton("ESP 3D", UDim2.new(0, 15, 0, currentY), mainFrame) -- New ESP 3D button
-currentY = currentY + esp3DBtn.Size.Y.Offset + 10
+    -- Update initial button states
+    espBtn.Text = "Player ESP: " .. (esp and "On" or "Off")
+    espTeamBtn.Text = "Player ESP: Team Filter: " .. (espTeamCheck and "On" or "Off")
+    esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off")
+    esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
+end
 
-local esp3DTeamBtn = createButton("ESP 3D: Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame) -- New ESP 3D Team filter button
-currentY = currentY + esp3DTeamBtn.Size.Y.Offset + 20
+local function showMiscEnhancements()
+    clearContentFrame()
+    local noclipBtn = createContentButton("NoClip", contentFrame)
+    local speedBtn = createContentButton("Speed", contentFrame)
+    local speedInputTextBox = createContentTextBox("SpeedInput", contentFrame, "Speed Value", flyNoclipSpeed)
 
-local hitboxHeader = createHeader("Hitbox Modifiers", currentY, mainFrame)
-currentY = currentY + hitboxHeader.Size.Y.Offset + 10
+    noclipBtn.MouseButton1Click:Connect(function()
+        noclipEnabled = not noclipEnabled
+        noclipBtn.Text = "NoClip: " .. (noclipEnabled and "On" or "Off")
+        setNoClip(noclipEnabled)
+        showNotify(noclipEnabled and "NoClip Enabled." or "NoClip Disabled.")
+    end)
 
-local hitboxBtn = createButton("Hitbox Enhancement", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + hitboxBtn.Size.Y.Offset + 10
+    speedBtn.MouseButton1Click:Connect(function()
+        speedEnabled = not speedEnabled
+        speedBtn.Text = "Speed: " .. (speedEnabled and "On" or "Off")
 
-local hitboxInput = createTextBox("HitboxSizeInput", UDim2.new(0, 15, 0, currentY), mainFrame, "Hitbox Size (0-300)", hitboxSize) 
-currentY = currentY + hitboxInput.Size.Y.Offset + 5
+        if speedEnabled then
+            local desiredSpeed = tonumber(speedInputTextBox.Text)
+            if desiredSpeed and desiredSpeed > 0 then
+                flyNoclipSpeed = desiredSpeed
+                lastValidSpeed = desiredSpeed
+            else
+                flyNoclipSpeed = lastValidSpeed
+                speedInputTextBox.Text = tostring(lastValidSpeed)
+            end
+     
+            -- Start Speed movement
+            if speedConnection then
+                speedConnection:Disconnect()
+                speedConnection = nil
+            end
+            speedConnection = RunService.RenderStepped:Connect(function()
+                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.Humanoid.MoveDirection.Magnitude > 0 then
+                    local moveDir = player.Character.Humanoid.MoveDirection
+                    player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame + moveDir * math.max(flyNoclipSpeed, 1) * 0.016
+                end
+            end)
+            showNotify("Speed Enabled: Walk speed set to " .. flyNoclipSpeed .. ".")
+        else
+            if speedConnection then
+                speedConnection:Disconnect()
+                speedConnection = nil
+            end
+            showNotify("Speed Disabled: Speed has been turned off.")
+        end
+    end)
 
-local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", UDim2.new(0, 15, 0, currentY), mainFrame, "Transparency (0.0-1.0)", hitboxTransparency) 
-currentY = currentY + hitboxTransparencyInput.Size.Y.Offset + 10
+    speedInputTextBox.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            local val = tonumber(speedInputTextBox.Text)
+            if val and val > 0 then
+                flyNoclipSpeed = val
+                lastValidSpeed = val
+                showNotify("Speed value updated to: " .. flyNoclipSpeed)
+                if speedEnabled and player.Character and player.Character:FindFirstChild("Humanoid") then
+                    -- Re-apply speed if already enabled to use new value
+                    showNotify("Speed re-applied with new value: " .. flyNoclipSpeed .. ".")
+                end
+            else
+                showNotify("Invalid Speed value. Please enter a positive number.")
+                speedInputTextBox.Text = tostring(lastValidSpeed)
+            end
+        end
+    end)
 
-local teamCheckHitboxBtn = createButton("Hitbox Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame) 
-currentY = currentY + teamCheckHitboxBtn.Size.Y.Offset + 10
+    -- Update initial button states
+    noclipBtn.Text = "NoClip: " .. (noclipEnabled and "On" or "Off")
+    speedBtn.Text = "Speed: " .. (speedEnabled and "On" or "Off")
+    speedInputTextBox.Text = tostring(flyNoclipSpeed)
+end
+
+local function showHitboxModifiers()
+    clearContentFrame()
+    local hitboxBtn = createContentButton("Hitbox Enhancement", contentFrame)
+    local hitboxInput = createContentTextBox("HitboxSizeInput", contentFrame, "Hitbox Size (0-300)", hitboxSize)
+    local hitboxTransparencyInput = createContentTextBox("HitboxTransparencyInput", contentFrame, "Transparency (0.0-1.0)", hitboxTransparency)
+    local teamCheckHitboxBtn = createContentButton("Hitbox Team Filter", contentFrame)
+
+    hitboxBtn.MouseButton1Click:Connect(function()
+        hitbox = not hitbox
+        hitboxBtn.Text = "Hitbox Enhancement: " .. (hitbox and "On" or "Off")
+
+        if hitbox then
+            showNotify("Hitbox enhancement enabled for external players. (Size: " .. hitboxSize .. ", Transparency: " .. hitboxTransparency .. ").")
+            updateHitboxes() 
+            showNotify("Note: Client-side modifications may be reverted by game anti-cheat systems.")
+        else
+            showNotify("Hitbox enhancement disabled. Restoring default hitboxes.")
+            resetAllHitboxes() 
+        end
+    end)
+    hitboxInput.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            local val = tonumber(hitboxInput.Text)
+            if val and val >= 0 and val <= 300 then 
+                hitboxSize = val
+                if hitbox then
+                    updateHitboxes()
+                end
+                showNotify("Hitbox Size updated to: " .. hitboxSize)
+            else
+                showNotify("Invalid Hitbox size. Please enter a value between 0-300.")
+                hitboxInput.Text = tostring(hitboxSize)
+            end
+        end
+    end)
+    hitboxTransparencyInput.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            local val = tonumber(hitboxTransparencyInput.Text)
+            if val and val >= 0.0 and val <= 1.0 then 
+                hitboxTransparency = val
+                if hitbox then
+                    updateHitboxes()
+                end
+                showNotify("Hitbox Transparency updated to: " .. hitboxTransparency)
+            else
+                showNotify("Invalid Transparency value. Please enter a value between 0.0-1.0.")
+                hitboxTransparencyInput.Text = tostring(hitboxTransparency)
+            end
+        end
+    end)
+    teamCheckHitboxBtn.MouseButton1Click:Connect(function()
+        teamCheckHitbox = not teamCheckHitbox
+        teamCheckHitboxBtn.Text = "Hitbox Team Filter: " .. (teamCheckHitbox and "On" or "Off")
+        if teamCheckHitbox then
+            showNotify("Hitbox Team Filter enabled: Affects non-team players only.")
+        else
+            showNotify("Hitbox Team Filter disabled: Affects all players.")
+        end
+        if hitbox then
+            resetAllHitboxes() 
+            updateHitboxes()
+        end
+    end)
+
+    -- Update initial button states
+    hitboxBtn.Text = "Hitbox Enhancement: " .. (hitbox and "On" or "Off")
+    teamCheckHitboxBtn.Text = "Hitbox Team Filter: " .. (teamCheckHitbox and "On" or "Off")
+end
+
+
+-- Create Menu Buttons
+local combatBtn = createMenuButton("Combat Settings", 1)
+local visualBtn = createMenuButton("Visual Enhancements", 2)
+local miscBtn = createMenuButton("Misc Enhancements", 3)
+local hitboxBtn = createMenuButton("Hitbox Modifiers", 4)
+
+
+-- Connect Menu Buttons to Content Functions
+combatBtn.MouseButton1Click:Connect(showCombatSettings)
+visualBtn.MouseButton1Click:Connect(showVisualEnhancements)
+miscBtn.MouseButton1Click:Connect(showMiscEnhancements)
+hitboxBtn.MouseButton1Click:Connect(showHitboxModifiers)
 
 
 local highlights = {}
@@ -392,32 +831,26 @@ local function applyESP3DBox(p)
             return 
         end
 
-        local rootPart = p.Character:FindFirstChild("HumanoidRootPart")
-        if rootPart then
+        local humanoidRootPart = p.Character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
             if not appliedESP3DBoxes[p] then
-                local box = Instance.new("Part")
+                local box = Instance.new("BoxHandleAdornment")
                 box.Name = "ESP3DBox"
-                box.Size = Vector3.new(3, 7, 1) -- A reasonable size for a player box
-                box.Transparency = 0.6
-                box.BrickColor = BrickColor.new("Really red")
-                box.CanCollide = false
-                box.Anchored = true
-                box.Parent = workspace.CurrentCamera -- Parent to camera to always be visible (client-side)
+                box.Adornee = humanoidRootPart
+                box.Size = Vector3.new(4, 6, 4) -- Approximate size to fit around a character
+                box.Color3 = Color3.fromRGB(0, 255, 0) -- Green box
+                box.Transparency = 0.5
+                box.AlwaysOnTop = true
+                box.ZIndex = 10
+                box.Parent = boxFolder -- Parent to the dedicated folder
                 
-                -- Create a Weld to keep the box attached to the player's HumanoidRootPart
-                local weld = Instance.new("WeldConstraint")
-                weld.Parent = box
-                weld.Part0 = box
-                weld.Part1 = rootPart
-                
-                box.CFrame = rootPart.CFrame -- Initial position
-
                 appliedESP3DBoxes[p] = box
 
             else
                 -- If box exists, just update its properties in case transparency/color changed
-                appliedESP3DBoxes[p].Transparency = 0.6
-                appliedESP3DBoxes[p].BrickColor = BrickColor.new("Really red")
+                appliedESP3DBoxes[p].Transparency = 0.5
+                appliedESP3DBoxes[p].Color3 = Color3.fromRGB(0, 255, 0)
+                appliedESP3DBoxes[p].Size = Vector3.new(4, 6, 4)
             end
         end
     end
@@ -577,7 +1010,7 @@ local function handleTeleportLoop(dt)
         teleportTarget = getRandomLivingTarget() 
         if not teleportTarget then
             killAll = false
-            teleportLoopBtn.Text = "Teleport Loop: Off"
+            -- teleportLoopBtn.Text = "Teleport Loop: Off" -- Cannot directly update button from here
             showNotify("Teleport Loop: No active targets available.")
             return
         end
@@ -598,166 +1031,8 @@ local function handleTeleportLoop(dt)
 	end
 end
 
-local function updateLockBtn()
-	lockBtn.Text = "Target Lock: " .. (lockset or "None")
-end
-
-aimbotBtn.MouseButton1Click:Connect(function()
-	aimbot = not aimbot
-	aimbotBtn.Text = "Aimbot: " .. (aimbot and "On" or "Off")
-	if aimbot then
-		showNotify("Aimbot functionality enabled. Targeting non-team players.")
-		currentAimbotTarget = getClosestVisibleTarget() 
-		if not currentAimbotTarget then
-			showNotify("Aimbot: No immediate valid targets detected.")
-		end
-	else
-		showNotify("Aimbot functionality disabled.")
-		currentAimbotTarget = nil
-	end
-end)
-
-espBtn.MouseButton1Click:Connect(function()
-	esp = not esp
-	espBtn.Text = "Player ESP: " .. (esp and "On" or "Off")
-	updateHighlights()
-	showNotify(esp and "Player ESP Display Enabled." or "Player ESP Display Disabled.")
-end)
-
-espTeamBtn.MouseButton1Click:Connect(function() 
-    espTeamCheck = not espTeamCheck
-    espTeamBtn.Text = "Player ESP: Team Filter: " .. (espTeamCheck and "On" or "Off")
-    if espTeamCheck then
-        showNotify("Player ESP Team Filter: Only non-team players highlighted.")
-    else
-        showNotify("Player ESP Team Filter: All players highlighted (excluding self).")
-    end
-    updateHighlights() 
-end)
-
-esp3DBtn.MouseButton1Click:Connect(function() -- New ESP 3D toggle handler
-    esp3D = not esp3D
-    esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off")
-    if esp3D then
-        showNotify("ESP 3D enabled. Visual boxes around players.")
-        updateESP3DBoxes()
-    else
-        showNotify("ESP 3D disabled. Removing visual boxes.")
-        for _, p in pairs(Players:GetPlayers()) do
-            removeESP3DBox(p)
-        end
-    end
-end)
-
-esp3DTeamBtn.MouseButton1Click:Connect(function() -- New ESP 3D Team Filter handler
-    esp3DTeamCheck = not esp3DTeamCheck
-    esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
-    if esp3DTeamCheck then
-        showNotify("ESP 3D Team Filter enabled: Affects non-team players only.")
-    else
-        showNotify("ESP 3D Team Filter disabled: Affects all players.")
-    end
-    if esp3D then
-        updateESP3DBoxes()
-    end
-end)
-
-lockBtn.MouseButton1Click:Connect(function()
-	currentLockPartIndex = currentLockPartIndex + 1
-	if currentLockPartIndex > #lockParts then
-		currentLockPartIndex = 1
-	end
-	lockset = lockParts[currentLockPartIndex]
-	updateLockBtn()
-	showNotify("Target Lockpoint set to: " .. lockset)
-end)
-
-teleportLoopBtn.MouseButton1Click:Connect(function() 
-	killAll = not killAll 
-	teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off") 
-
-	if killAll then
-		teleportTarget = getRandomLivingTarget() 
-		if not teleportTarget then
-			showNotify("Teleport Loop: No valid targets found.")
-			killAll = false
-			teleportLoopBtn.Text = "Teleport Loop: Off"
-		else
-			showNotify("Teleport Loop initiated. Teleporting to: " .. teleportTarget.Name)
-		end
-	else
-		showNotify("Teleport Loop deactivated.")
-		teleportTarget = nil
-	end
-end)
-
-hitboxBtn.MouseButton1Click:Connect(function()
-	hitbox = not hitbox
-	hitboxBtn.Text = "Hitbox Enhancement: " .. (hitbox and "On" or "Off")
-
-	if hitbox then
-		showNotify("Hitbox enhancement enabled for external players. (Size: " .. hitboxSize .. ", Transparency: " .. hitboxTransparency .. ").")
-		updateHitboxes() 
-		showNotify("Note: Client-side modifications may be reverted by game anti-cheat systems.")
-	else
-		showNotify("Hitbox enhancement disabled. Restoring default hitboxes.")
-		resetAllHitboxes() 
-	end
-end)
-
-hitboxInput.FocusLost:Connect(function(enterPressed)
-	if enterPressed then
-		local val = tonumber(hitboxInput.Text)
-		if val and val >= 0 and val <= 300 then 
-			hitboxSize = val
-			if hitbox then
-				updateHitboxes()
-			end
-			showNotify("Hitbox Size updated to: " .. hitboxSize)
-		else
-			showNotify("Invalid Hitbox size. Please enter a value between 0-300.")
-			hitboxInput.Text = tostring(hitboxSize)
-		end
-	end
-end)
-
-hitboxTransparencyInput.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        local val = tonumber(hitboxTransparencyInput.Text)
-        if val and val >= 0.0 and val <= 1.0 then 
-            hitboxTransparency = val
-            if hitbox then
-                updateHitboxes()
-            end
-            showNotify("Hitbox Transparency updated to: " .. hitboxTransparency)
-        else
-            showNotify("Invalid Transparency value. Please enter a value between 0.0-1.0.")
-            hitboxTransparencyInput.Text = tostring(hitboxTransparency)
-        end
-    end
-end)
-
-teamCheckHitboxBtn.MouseButton1Click:Connect(function()
-    teamCheckHitbox = not teamCheckHitbox
-    teamCheckHitboxBtn.Text = "Hitbox Team Filter: " .. (teamCheckHitbox and "On" or "Off")
-    if teamCheckHitbox then
-        showNotify("Hitbox Team Filter enabled: Affects non-team players only.")
-    else
-        showNotify("Hitbox Team Filter disabled: Affects all players.")
-    end
-    if hitbox then
-        resetAllHitboxes() 
-        updateHitboxes()
-    end
-end)
-
 local function setupGUIAndDefaults()
-    updateLockBtn()
-    espTeamBtn.Text = "Player ESP: Team Filter: " .. (espTeamCheck and "On" or "Off") 
-    esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off") -- Set initial text for ESP 3D
-    esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off") -- Set initial text for ESP 3D Team Filter
-    teamCheckHitboxBtn.Text = "Hitbox Team Filter: " .. (teamCheckHitbox and "On" or "Off")
-    teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off") 
+    -- No direct updates needed here, as buttons update on category selection
 end
 
 Players.PlayerAdded:Connect(function(newPlayer)
@@ -765,11 +1040,10 @@ Players.PlayerAdded:Connect(function(newPlayer)
         if hitbox then
             applyHitboxToPlayer(newPlayer)
         end
-        if esp3D then -- New: Apply ESP 3D when new player character added
+        if esp3D then 
             applyESP3DBox(newPlayer)
         end
     end)
-    -- Initial ESP 3D update for newly added player if esp3D is active
     if esp3D then
         applyESP3DBox(newPlayer)
     end
@@ -782,7 +1056,7 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
     if appliedHitboxes[leavingPlayer] then
         appliedHitboxes[leavingPlayer] = nil
     end
-    removeESP3DBox(leavingPlayer) -- New: Remove ESP 3D box when player leaves
+    removeESP3DBox(leavingPlayer) 
 	if currentAimbotTarget == leavingPlayer then
 		currentAimbotTarget = nil
 	end
@@ -794,7 +1068,7 @@ end)
 
 local function checkKey()
     local enteredKey = keyInputBox.Text:lower()
-    if enteredKey == correctKey or enteredKey == "dev" then
+    if enteredKey == correctKey then
         keyInputGui:Destroy() 
         mainFrame.Visible = true 
         toggleBtn.Visible = true 
@@ -854,7 +1128,7 @@ RunService.RenderStepped:Connect(function(dt)
 	if esp then
 		updateHighlights()
 	end
-    if esp3D then -- New: Update ESP 3D boxes
+    if esp3D then 
         updateESP3DBoxes()
     end
 end)
@@ -862,8 +1136,11 @@ end)
 keyInputBox:CaptureFocus() 
 showNotify("Please authenticate your access key to proceed.")
 
+-- Initial state: show initial message
+initialMessage.Visible = true 
+
 while true do
 	wait(1)
 	if mainFrame.Visible and esp then updateHighlights() end
-    if esp3D then updateESP3DBoxes() end -- New: Always update ESP 3D boxes if enabled, regardless of GUI visibility
+    if esp3D then updateESP3DBoxes() end
 end
