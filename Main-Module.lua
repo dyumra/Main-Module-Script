@@ -24,11 +24,11 @@ local currentAimbotTarget = nil
 local teleportTarget = nil 
 local teleportInterval = 0.15 
 local teleportTimer = 0 
-local lockParts = {"Head", "Torso", "UpperTorso", "HumanoidRootPart"}
+local lockParts = {"Not Set!", "Head", "Torso", "UpperTorso", "HumanoidRootPart"}
 local originalWalkSpeeds = {}
 local appliedHitboxes = {} 
 
-local currentLockPartIndex = 2
+local currentLockPartIndex = 1
 local lockset = lockParts[currentLockPartIndex]
 
 local TELEPORT_OFFSET_DISTANCE = 1.5
@@ -54,6 +54,8 @@ local function detectLockSet(character)
 		return "HumanoidRootPart"
 	elseif character:FindFirstChild("Head") then
 		return "Head"
+	elseif character:FindFirstChild("Not Set!") then
+		return "Not Set!"
 	else
 		return nil
 	end
