@@ -6,7 +6,7 @@ About Script for Roblox
 
 Loadstring to execute Main-Module!
 ```lua
-loadstring(game:HttpGet('https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/main/latest.lua'))()
+loadstring(game:HttpGet('https://raw.githubusercontent.com/dyumra/Main-Module-Script/refs/heads/main/Main-Module.lua'))()
 ```
 
 ## 🔑 - Key
