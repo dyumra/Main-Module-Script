@@ -1,22 +1,23 @@
 ## ⚙️ - Main-Module-Script
 
-This script is about Roblox, if we thank you for waiting **(DYHUB BACK!)**
+Welcome, and thank you for your patience.
+**(DYHUB)** is back online!
 
 ## 📌 - Loadstring
 
-Loadstring to execute **Main-Module!**
+Use the following loadstring to execute the  **Main-Module** Script:
 ```lua
 loadstring(game:HttpGet('https://raw.githubusercontent.com/dyumra/Main-Module-Script/refs/heads/main/Main-Module.lua'))()
 ```
 
-## 🔑 - Key
+## 🔑 - Access Key
 
-Key to **Access-Script** for Using!
+Please use the **Access Key** below to enable script functionality:
 ```css
-Key: dyumra
+dyumra-k3b7-wp9d-a2n8 (18729 Days)
 ```
 
 
-🔔 - **Support:** All Executive
+🔔 - **Support:** Compatible with all Executors
 
-📂 - **Log:** in Discord, We can checking.
+📂 - **Logs:** All activity is logged and can be reviewed via Discord
