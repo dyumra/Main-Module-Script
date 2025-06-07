@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 3.02 - Authenticated Interface Edition ]]
+-- [[ 📊 Version: 3.01 - Authenticated Interface Edition ]]
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
@@ -11,40 +11,44 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local ReplicatedStorage = game:GetService("ReplicatedStorage") 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterGui = game:GetService("StarterGui") -- Added for notifications
 
 local aimbot = false
 local esp = false
-local espTeamCheck = false 
-local esp3D = false 
-local esp3DTeamCheck = false 
-local killAll = false 
+local espTeamCheck = false
+local esp3D = false
+local esp3DTeamCheck = false
+local killAll = false
 local hitbox = false
-local hitboxSize = 0 
-local hitboxTransparency = 0.7 
-local teamCheckHitbox = false 
+local hitboxSize = 0
+local hitboxTransparency = 0.7
+local teamCheckHitbox = false
 local currentAimbotTarget = nil
-local teleportTarget = nil 
-local teleportInterval = 0.15 
-local teleportTimer = 0 
-local lockParts = {"Head", "Torso", "UpperTorso", "HumanoidRootPart", "None"}
+local teleportTarget = nil
+local teleportInterval = 0.15
+local teleportTimer = 0
+local lockParts = {"None", "Head", "Torso", "UpperTorso", "HumanoidRootPart"}
 local originalWalkSpeeds = {}
-local appliedHitboxes = {} 
-local appliedESP3DBoxes = {} 
+local appliedHitboxes = {}
+local appliedESP3DBoxes = {}
 
-local currentLockPartIndex = 5
+local currentLockPartIndex = 1
 local lockset = lockParts[currentLockPartIndex]
 
 local TELEPORT_OFFSET_DISTANCE = 1.5
-local TELEPORT_VERTICAL_OFFSET = 0 
+local TELEPORT_VERTICAL_OFFSET = 0
 
-local AIMBOT_SWITCH_DISTANCE = 8
+local AIMBOT_SWITCH_DISTANCE = 10
 
 local correctKey = "dyumra-k3b7-wp9d-a2n8"
 local maxAttempts = 3
 local currentAttempts = 0
-local lifetime = math.random(6969, 7777)
+-- time lifetime
+local lifetimeWeeks = math.random(10000, 12222)
+local lifetimeDays = math.random(1, 31)
+local lifetimeHour = math.random(1, 60)
+local lifetimeSec = math.random(1, 60)
 
 -- Misc variables
 local noclipEnabled = false
@@ -58,7 +62,7 @@ local lastValidSpeed = 30 -- To store last valid speed
 -- Folder for ESP3D adornments
 local boxFolder = Instance.new("Folder")
 boxFolder.Name = "ESP3DBoxes"
-boxFolder.Parent = workspace.CurrentCamera -- Parent to camera to avoid replication issues. Important for client-side visual effects.
+boxFolder.Parent = workspace.CurrentCamera -- Parent to camera to avoid replication issues
 
 local function detectLockSet(character)
 	if character:FindFirstChild("Torso") then
@@ -86,7 +90,7 @@ end
 
 local function kickPlayer(reason)
     if game:IsLoaded() and player then
-        local kickEvent = ReplicatedStorage:FindFirstChild("KickPlayer") 
+        local kickEvent = ReplicatedStorage:FindFirstChild("KickPlayer")
         if kickEvent and kickEvent:IsA("RemoteEvent") then
             kickEvent:FireServer(reason)
         else
@@ -107,9 +111,10 @@ local function kickPlayer(reason)
     end
 end
 
-wait(0.1) 
+-- Wait for player and PlayerGui to ensure they exist before creating GUIs
+player:WaitForChild("PlayerGui")
+wait(0.1) -- Small wait to ensure Roblox has processed the PlayerGui
 
--- Key Input GUI setup (remains unchanged)
 local keyInputGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 keyInputGui.Name = "KeyInputGui"
 keyInputGui.ResetOnSpawn = false
@@ -165,7 +170,7 @@ keyInputBox.Font = Enum.Font.GothamBold
 keyInputBox.TextSize = 18
 keyInputBox.PlaceholderText = "Enter Access Key..."
 keyInputBox.ClearTextOnFocus = false
-keyInputBox.AnchorPoint = Vector2.new(0.5, 0.5) 
+keyInputBox.AnchorPoint = Vector2.new(0.5, 0.5)
 
 local keyInputCorner = Instance.new("UICorner", keyInputBox)
 keyInputCorner.CornerRadius = UDim.new(0, 10)
@@ -189,10 +194,10 @@ local keySubmitCorner = Instance.new("UICorner", keySubmitBtn)
 keySubmitCorner.CornerRadius = UDim.new(0, 12)
 
 local keySubmitStroke = Instance.new("UIStroke", keySubmitBtn)
-keySubmitStroke.Color = Color3.fromRGB(180, 0, 0)
+keySubmitStroke.Color = Color3.fromRGB(185, 0, 0)
 keySubmitStroke.Thickness = 2
 
--- Main Dyhub GUI setup
+-- MAIN GUI
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "DyhubGui"
 screenGui.ResetOnSpawn = false
@@ -207,7 +212,7 @@ mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
 mainFrame.Active = true
 mainFrame.Draggable = true
-mainFrame.Visible = false 
+mainFrame.Visible = false -- Initially hidden
 
 local corner = Instance.new("UICorner", mainFrame)
 corner.CornerRadius = UDim.new(0, 12)
@@ -239,7 +244,7 @@ titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextSize = 18
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Text = "DYHUB | V3.02 - Dyumra's Innovations"
+titleLabel.Text = "DYHUB | V3.01 - Dyumra's Innovations"
 titleLabel.ZIndex = 2
 
 local closeButton = Instance.new("TextButton")
@@ -393,7 +398,7 @@ toggleBtn.Font = Enum.Font.GothamBold
 toggleBtn.TextSize = 16
 toggleBtn.Text = "MENU"
 toggleBtn.AnchorPoint = Vector2.new(0,0)
-toggleBtn.Visible = false 
+toggleBtn.Visible = false -- Initially hidden until key is entered
 
 local toggleCorner = Instance.new("UICorner", toggleBtn)
 toggleCorner.CornerRadius = UDim.new(0, 8)
@@ -475,11 +480,12 @@ end
 
 local function clearContentFrame()
     for _, child in pairs(contentFrame:GetChildren()) do
-        if child ~= initialMessage then -- Keep the initial message for now
+        -- Only destroy children that are NOT the initial message
+        if child ~= initialMessage then
             child:Destroy()
         end
     end
-    initialMessage.Visible = false
+    initialMessage.Visible = false -- Hide the initial message when content is added
 end
 
 local function setNoClip(enabled)
@@ -487,10 +493,10 @@ local function setNoClip(enabled)
         noclipConnection:Disconnect()
         noclipConnection = nil
     end
- 
+
     if enabled then
         noclipConnection = RunService.Stepped:Connect(function()
-            local character = player.Character -- Changed from localPlayer to player
+            local character = player.Character
             if character then
                 for _, part in pairs(character:GetDescendants()) do
                     if part:IsA("BasePart") then
@@ -500,7 +506,7 @@ local function setNoClip(enabled)
             end
         end)
     else
-        local character = player.Character -- Changed from localPlayer to player
+        local character = player.Character
         if character then
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
@@ -522,7 +528,7 @@ local function showCombatSettings()
         aimbotBtn.Text = "Aimbot: " .. (aimbot and "On" or "Off")
         if aimbot then
             showNotify("Aimbot functionality enabled. Targeting non-team players.")
-            currentAimbotTarget = getClosestVisibleTarget() 
+            currentAimbotTarget = getClosestVisibleTarget()
             if not currentAimbotTarget then
                 showNotify("Aimbot: No immediate valid targets detected.")
             end
@@ -540,12 +546,12 @@ local function showCombatSettings()
         lockBtn.Text = "Target Lock: " .. (lockset or "None")
         showNotify("Target Lockpoint set to: " .. lockset)
     end)
-    teleportLoopBtn.MouseButton1Click:Connect(function() 
-        killAll = not killAll 
-        teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off") 
+    teleportLoopBtn.MouseButton1Click:Connect(function()
+        killAll = not killAll
+        teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off")
 
         if killAll then
-            teleportTarget = getRandomLivingTarget() 
+            teleportTarget = getRandomLivingTarget()
             if not teleportTarget then
                 showNotify("Teleport Loop: No valid targets found.")
                 killAll = false
@@ -578,7 +584,7 @@ local function showVisualEnhancements()
         updateHighlights()
         showNotify(esp and "Player ESP Display Enabled." or "Player ESP Display Disabled.")
     end)
-    espTeamBtn.MouseButton1Click:Connect(function() 
+    espTeamBtn.MouseButton1Click:Connect(function()
         espTeamCheck = not espTeamCheck
         espTeamBtn.Text = "Player ESP: Team Filter: " .. (espTeamCheck and "On" or "Off")
         if espTeamCheck then
@@ -586,9 +592,9 @@ local function showVisualEnhancements()
         else
             showNotify("Player ESP Team Filter: All players highlighted (excluding self).")
         end
-        updateHighlights() 
+        updateHighlights()
     end)
-    esp3DBtn.MouseButton1Click:Connect(function() 
+    esp3DBtn.MouseButton1Click:Connect(function()
         esp3D = not esp3D
         esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off")
         if esp3D then
@@ -601,7 +607,7 @@ local function showVisualEnhancements()
             end
         end
     end)
-    esp3DTeamBtn.MouseButton1Click:Connect(function() 
+    esp3DTeamBtn.MouseButton1Click:Connect(function()
         esp3DTeamCheck = not esp3DTeamCheck
         esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
         if esp3DTeamCheck then
@@ -647,7 +653,7 @@ local function showMiscEnhancements()
                 flyNoclipSpeed = lastValidSpeed
                 speedInputTextBox.Text = tostring(lastValidSpeed)
             end
-     
+
             -- Start Speed movement
             if speedConnection then
                 speedConnection:Disconnect()
@@ -656,8 +662,7 @@ local function showMiscEnhancements()
             speedConnection = RunService.RenderStepped:Connect(function()
                 if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.Humanoid.MoveDirection.Magnitude > 0 then
                     local moveDir = player.Character.Humanoid.MoveDirection
-                    -- Apply speed movement relative to the player's current CFrame
-                    player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame + moveDir * (flyNoclipSpeed / 60) -- 60 is a rough estimation of frames per second to make it consistent
+                    player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame + moveDir * math.max(flyNoclipSpeed, 1) * 0.016
                 end
             end)
             showNotify("Speed Enabled: Walk speed set to " .. flyNoclipSpeed .. ".")
@@ -707,17 +712,17 @@ local function showHitboxModifiers()
 
         if hitbox then
             showNotify("Hitbox enhancement enabled for external players. (Size: " .. hitboxSize .. ", Transparency: " .. hitboxTransparency .. ").")
-            updateHitboxes() 
+            updateHitboxes()
             showNotify("Note: Client-side modifications may be reverted by game anti-cheat systems.")
         else
             showNotify("Hitbox enhancement disabled. Restoring default hitboxes.")
-            resetAllHitboxes() 
+            resetAllHitboxes()
         end
     end)
     hitboxInput.FocusLost:Connect(function(enterPressed)
         if enterPressed then
             local val = tonumber(hitboxInput.Text)
-            if val and val >= 0 and val <= 300 then 
+            if val and val >= 0 and val <= 300 then
                 hitboxSize = val
                 if hitbox then
                     updateHitboxes()
@@ -732,7 +737,7 @@ local function showHitboxModifiers()
     hitboxTransparencyInput.FocusLost:Connect(function(enterPressed)
         if enterPressed then
             local val = tonumber(hitboxTransparencyInput.Text)
-            if val and val >= 0.0 and val <= 1.0 then 
+            if val and val >= 0.0 and val <= 1.0 then
                 hitboxTransparency = val
                 if hitbox then
                     updateHitboxes()
@@ -753,7 +758,7 @@ local function showHitboxModifiers()
             showNotify("Hitbox Team Filter disabled: Affects all players.")
         end
         if hitbox then
-            resetAllHitboxes() 
+            resetAllHitboxes()
             updateHitboxes()
         end
     end)
@@ -793,7 +798,7 @@ local function updateHighlights()
 			if highlights[plr] then
 				highlights[plr].Enabled = false
 			end
-			continue 
+			continue
 		end
 
 		if espTeamCheck and player.Team and plr.Team and plr.Team == player.Team then
@@ -809,7 +814,7 @@ local function updateHighlights()
 				highlight.Parent = player.PlayerGui
 				highlight.Adornee = plr.Character
 				highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-				highlight.Enabled = esp 
+				highlight.Enabled = esp
 
 				local teamColor = plr.TeamColor.Color
 				if plr.Team == nil or plr.TeamColor == nil or plr.TeamColor == BrickColor.new("Institutional white") then
@@ -821,7 +826,7 @@ local function updateHighlights()
 				end
 				highlights[plr] = highlight
 			else
-				highlights[plr].Enabled = esp 
+				highlights[plr].Enabled = esp
 			end
 		end
 	end
@@ -834,7 +839,7 @@ local function applyESP3DBox(p)
                 appliedESP3DBoxes[p]:Destroy()
                 appliedESP3DBoxes[p] = nil
             end
-            return 
+            return
         end
 
         local humanoidRootPart = p.Character:FindFirstChild("HumanoidRootPart")
@@ -849,7 +854,7 @@ local function applyESP3DBox(p)
                 box.AlwaysOnTop = true
                 box.ZIndex = 10
                 box.Parent = boxFolder -- Parent to the dedicated folder
-                
+
                 appliedESP3DBoxes[p] = box
 
             else
@@ -907,7 +912,7 @@ local function getClosestVisibleTarget()
 		if plr ~= player and plr.Character and plr.Character:FindFirstChild(lockset) and plr.Character:FindFirstChild("Humanoid") then
 			-- Aimbot: Exclude teammates if player has a team
             if player.Team and plr.Team and plr.Team == player.Team then
-                continue 
+                continue
             end
 
 			local humanoid = plr.Character.Humanoid
@@ -945,23 +950,26 @@ end
 local function applyHitboxToPlayer(p)
     if hitbox and p ~= player and p.Character then
         if teamCheckHitbox and player.Team and p.Team and p.Team == player.Team then
-            resetHitboxesForPlayer(p) 
-            return 
+            resetHitboxesForPlayer(p)
+            return
         end
 
-        local part = p.Character:FindFirstChild("HumanoidRootPart") 
+        local part = p.Character:FindFirstChild("HumanoidRootPart")
         if part then
-            part.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize) 
+            part.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
             part.Transparency = hitboxTransparency
-            part.Material = Enum.Material.Neon 
-            part.BrickColor = BrickColor.new("Really black") 
-            part.CanCollide = false 
-            
-            if not appliedHitboxes[p] or appliedHitboxes[p] == false then
-                originalWalkSpeeds[p] = p.Character.Humanoid.WalkSpeed
-                p.Character.Humanoid.WalkSpeed = 0
-                appliedHitboxes[p] = true
-            end
+            part.Material = Enum.Material.Neon
+            part.BrickColor = BrickColor.new("Really black")
+            part.CanCollide = false
+
+            -- Original script attempts to set walkspeed to 0 here.
+            -- This is likely not desired for a "hitbox" modification and can freeze players.
+            -- Uncomment if you explicitly want this "freeze" effect for affected players.
+            -- if not appliedHitboxes[p] or appliedHitboxes[p] == false then
+            --     originalWalkSpeeds[p] = p.Character.Humanoid.WalkSpeed
+            --     p.Character.Humanoid.WalkSpeed = 0
+            --     appliedHitboxes[p] = true
+            -- end
         end
     end
 end
@@ -976,11 +984,11 @@ local function resetHitboxesForPlayer(p)
     if p ~= player and p.Character then
         local part = p.Character:FindFirstChild("HumanoidRootPart")
         if part then
-            part.Size = Vector3.new(2,2,1) 
-            part.Transparency = 1 
-            part.Material = Enum.Material.Plastic 
-            part.BrickColor = BrickColor.new("Medium stone grey") 
-            part.CanCollide = false 
+            part.Size = Vector3.new(2,2,1)
+            part.Transparency = 1
+            part.Material = Enum.Material.Plastic
+            part.BrickColor = BrickColor.new("Medium stone grey")
+            part.CanCollide = false
         end
     end
     if originalWalkSpeeds[p] then
@@ -1006,14 +1014,14 @@ local function performTeleport(plr)
     local targetHRP = plr.Character.HumanoidRootPart
     local targetPos = targetHRP.Position
 
-    hrp.CFrame = CFrame.new(targetPos) 
+    hrp.CFrame = CFrame.new(targetPos)
 end
 
 local function handleTeleportLoop(dt)
-	if not killAll then return end 
+	if not killAll then return end
 
     if not teleportTarget or not teleportTarget.Character or not teleportTarget.Character:FindFirstChild("Humanoid") or teleportTarget.Character.Humanoid.Health <= 0 then
-        teleportTarget = getRandomLivingTarget() 
+        teleportTarget = getRandomLivingTarget()
         if not teleportTarget then
             killAll = false
             -- teleportLoopBtn.Text = "Teleport Loop: Off" -- Cannot directly update button from here
@@ -1029,7 +1037,7 @@ local function handleTeleportLoop(dt)
 			local humanoid = teleportTarget.Character.Humanoid
 			if humanoid.Health > 0 then
                 if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-				    performTeleport(teleportTarget) 
+				    performTeleport(teleportTarget)
                 end
 				showNotify("Teleporting to: " .. teleportTarget.Name)
 			end
@@ -1038,21 +1046,25 @@ local function handleTeleportLoop(dt)
 end
 
 local function setupGUIAndDefaults()
-    -- No direct updates needed here, as buttons update on category selection
+    -- This function is called once the key is authenticated.
+    -- No direct GUI updates needed here, as buttons update on category selection.
+    -- This function is more for initializing default states if any were complex.
+    -- For now, it mostly serves as a confirmation point after authentication.
+    showNotify("GUI setup and defaults initialized.")
+    initialMessage.Visible = true -- Ensure initial message is visible on first open
 end
 
--- PlayerAdded and PlayerRemoving events to handle dynamic ESP3D/Hitbox application/removal
 Players.PlayerAdded:Connect(function(newPlayer)
     newPlayer.CharacterAdded:Connect(function(char)
         if hitbox then
             applyHitboxToPlayer(newPlayer)
         end
-        if esp3D then 
+        if esp3D then
             applyESP3DBox(newPlayer)
         end
     end)
-    -- Also apply ESP3D box immediately if esp3D is active for the newly added player
-    if esp3D then
+    -- Also apply if the player's character already exists when they join
+    if newPlayer.Character and esp3D then
         applyESP3DBox(newPlayer)
     end
 end)
@@ -1064,26 +1076,26 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
     if appliedHitboxes[leavingPlayer] then
         appliedHitboxes[leavingPlayer] = nil
     end
-    removeESP3DBox(leavingPlayer) -- Ensure ESP3D box is removed when player leaves
+    removeESP3DBox(leavingPlayer)
 	if currentAimbotTarget == leavingPlayer then
 		currentAimbotTarget = nil
 	end
-	if teleportTarget == leavingPlayer then 
-		teleportTarget = nil 
+	if teleportTarget == leavingPlayer then
+		teleportTarget = nil
 	end
-    updateHighlights() 
+    updateHighlights()
 end)
 
 local function checkKey()
     local enteredKey = keyInputBox.Text:lower()
     if enteredKey == correctKey or enteredKey == "dev" then
-        keyInputGui:Destroy() 
-        mainFrame.Visible = true       -- Make the main GUI visible
-        toggleBtn.Visible = true       -- Make the toggle button visible
-        setupGUIAndDefaults()
-	showNotify("Access Granted. Key lifetime: (" .. lifetime .. " weeks)")
-        wait(0.5)
-        showNotify("Access granted. Main interface now available.")
+        keyInputGui:Destroy()
+        mainFrame.Visible = true -- Make the main GUI visible
+        toggleBtn.Visible = true -- Make the toggle button visible
+        setupGUIAndDefaults() -- Call setup function after making visible
+        showNotify("Access Granted. Key lifetime: " .. lifetimeWeeks .. " attempt(Weeks), (Days: " .. lifetimeDays .. "), (Hour: " .. lifetimeHour .. "), (Sec: " .. lifetimeSec .. ") remaining.")
+	wait(0.5)
+	showNotify("Access granted. Main interface now available.")
 	else
         currentAttempts = currentAttempts + 1
         local remainingAttempts = maxAttempts - currentAttempts
@@ -1091,7 +1103,7 @@ local function checkKey()
             showNotify("Invalid access key. " .. remainingAttempts .. " attempt(s) remaining.")
         else
             showNotify("Multiple invalid attempts. Access denied.")
-            wait(0.5)
+	    wait(0.5)
             kickPlayer("Access to this script has been suspended. (Error Code: Key_Denied_003)")
         end
     end
@@ -1119,7 +1131,7 @@ RunService.RenderStepped:Connect(function(dt)
 		if not currentAimbotTarget then
 			currentAimbotTarget = getClosestVisibleTarget()
 		end
-		
+
 		if currentAimbotTarget and currentAimbotTarget.Character and currentAimbotTarget.Character:FindFirstChild(lockset) then
 			local targetPart = currentAimbotTarget.Character[lockset]
 			local cameraPos = Camera.CFrame.Position
@@ -1132,26 +1144,35 @@ RunService.RenderStepped:Connect(function(dt)
 		currentAimbotTarget = nil
 	end
 
-	if killAll then 
-		handleTeleportLoop(dt) 
+	if killAll then
+		handleTeleportLoop(dt)
 	end
 
+	-- Ensure these are called regularly if active
 	if esp then
 		updateHighlights()
 	end
-    if esp3D then 
+    if esp3D then
         updateESP3DBoxes()
     end
 end)
 
-keyInputBox:CaptureFocus() 
+keyInputBox:CaptureFocus()
 showNotify("Please authenticate your access key to proceed.")
 
--- Initial state: show initial message
-initialMessage.Visible = true 
+-- Initial state: show initial message (but it will be hidden by clearContentFrame once a menu button is clicked)
+initialMessage.Visible = true
 
+-- The `while true do wait(1)` loop at the end of the original script is generally not ideal
+-- for continuously updating GUI elements or visuals. The `RunService.RenderStepped`
+-- loop handles most of the real-time updates. You can remove or adjust this `while` loop
+-- if it's causing performance issues or unnecessary processing.
+-- For now, I'll keep it as a minimal background check, but `RenderStepped` is preferred.
 while true do
 	wait(1)
+    -- These are already handled by RenderStepped for real-time updates.
+    -- This section is somewhat redundant but keeping it for now if there's a reason
+    -- for a less frequent, secondary check.
 	if mainFrame.Visible and esp then updateHighlights() end
     if esp3D then updateESP3DBoxes() end
 end
