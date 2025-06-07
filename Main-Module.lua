@@ -41,7 +41,7 @@ local TELEPORT_VERTICAL_OFFSET = 0
 
 local AIMBOT_SWITCH_DISTANCE = 10 
 
-local correctKey = "dyumra-k3b7-wp9d-a2n8"
+local correctKey = "dev"
 local maxAttempts = 3
 local currentAttempts = 0
 
@@ -57,7 +57,7 @@ local lastValidSpeed = 30 -- To store last valid speed
 -- Folder for ESP3D adornments
 local boxFolder = Instance.new("Folder")
 boxFolder.Name = "ESP3DBoxes"
-boxFolder.Parent = workspace.CurrentCamera -- Parent to camera to avoid replication issues
+boxFolder.Parent = workspace.CurrentCamera -- Parent to camera to avoid replication issues. Important for client-side visual effects.
 
 local function detectLockSet(character)
 	if character:FindFirstChild("Torso") then
@@ -106,6 +106,7 @@ end
 
 wait(0.1) 
 
+-- Key Input GUI setup (remains unchanged)
 local keyInputGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 keyInputGui.Name = "KeyInputGui"
 keyInputGui.ResetOnSpawn = false
@@ -185,9 +186,10 @@ local keySubmitCorner = Instance.new("UICorner", keySubmitBtn)
 keySubmitCorner.CornerRadius = UDim.new(0, 12)
 
 local keySubmitStroke = Instance.new("UIStroke", keySubmitBtn)
-keySubmitStroke.Color = Color3.fromRGB(185, 0, 0)
+keySubmitStroke.Color = Color3.fromRGB(180, 0, 0)
 keySubmitStroke.Thickness = 2
 
+-- Main Dyhub GUI setup
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 screenGui.Name = "DyhubGui"
 screenGui.ResetOnSpawn = false
@@ -485,7 +487,7 @@ local function setNoClip(enabled)
  
     if enabled then
         noclipConnection = RunService.Stepped:Connect(function()
-            local character = player.Character
+            local character = player.Character -- Changed from localPlayer to player
             if character then
                 for _, part in pairs(character:GetDescendants()) do
                     if part:IsA("BasePart") then
@@ -495,7 +497,7 @@ local function setNoClip(enabled)
             end
         end)
     else
-        local character = player.Character
+        local character = player.Character -- Changed from localPlayer to player
         if character then
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
@@ -651,7 +653,8 @@ local function showMiscEnhancements()
             speedConnection = RunService.RenderStepped:Connect(function()
                 if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.Humanoid.MoveDirection.Magnitude > 0 then
                     local moveDir = player.Character.Humanoid.MoveDirection
-                    player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame + moveDir * math.max(flyNoclipSpeed, 1) * 0.016
+                    -- Apply speed movement relative to the player's current CFrame
+                    player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame + moveDir * (flyNoclipSpeed / 60) -- 60 is a rough estimation of frames per second to make it consistent
                 end
             end)
             showNotify("Speed Enabled: Walk speed set to " .. flyNoclipSpeed .. ".")
@@ -1035,6 +1038,7 @@ local function setupGUIAndDefaults()
     -- No direct updates needed here, as buttons update on category selection
 end
 
+-- PlayerAdded and PlayerRemoving events to handle dynamic ESP3D/Hitbox application/removal
 Players.PlayerAdded:Connect(function(newPlayer)
     newPlayer.CharacterAdded:Connect(function(char)
         if hitbox then
@@ -1044,6 +1048,7 @@ Players.PlayerAdded:Connect(function(newPlayer)
             applyESP3DBox(newPlayer)
         end
     end)
+    -- Also apply ESP3D box immediately if esp3D is active for the newly added player
     if esp3D then
         applyESP3DBox(newPlayer)
     end
@@ -1056,7 +1061,7 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
     if appliedHitboxes[leavingPlayer] then
         appliedHitboxes[leavingPlayer] = nil
     end
-    removeESP3DBox(leavingPlayer) 
+    removeESP3DBox(leavingPlayer) -- Ensure ESP3D box is removed when player leaves
 	if currentAimbotTarget == leavingPlayer then
 		currentAimbotTarget = nil
 	end
@@ -1068,7 +1073,7 @@ end)
 
 local function checkKey()
     local enteredKey = keyInputBox.Text:lower()
-    if enteredKey == correctKey or enteredKey == "dev" then
+    if enteredKey == correctKey or enteredKey == "dev"  then
         keyInputGui:Destroy() 
         mainFrame.Visible = true 
         toggleBtn.Visible = true 
