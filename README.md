@@ -13,7 +13,7 @@ loadstring(game:HttpGet('https://raw.githubusercontent.com/dyumra/Main-Module-Sc
 
 Key to **Access-Script** for Using!
 ```css
-[dyumra]
+Key: dyumra
 ```
 
 
