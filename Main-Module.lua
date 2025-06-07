@@ -39,9 +39,9 @@ local lockset = lockParts[currentLockPartIndex]
 local TELEPORT_OFFSET_DISTANCE = 1.5
 local TELEPORT_VERTICAL_OFFSET = 0 
 
-local AIMBOT_SWITCH_DISTANCE = 10 
+local AIMBOT_SWITCH_DISTANCE = 8
 
-local correctKey = "dev"
+local correctKey = "dyumra-k3b7-wp9d-a2n8"
 local maxAttempts = 3
 local currentAttempts = 0
 
