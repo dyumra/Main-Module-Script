@@ -1076,11 +1076,11 @@ end)
 
 local function checkKey()
     local enteredKey = keyInputBox.Text:lower()
-    if enteredKey == correctKey or enteredKey == "dev"  then
+    if enteredKey == correctKey or enteredKey == "dev" then
         keyInputGui:Destroy() 
-        mainFrame.Visible = true 
-        toggleBtn.Visible = true 
-        setupGUIAndDefaults() 
+        mainFrame.Visible = true       -- Make the main GUI visible
+        toggleBtn.Visible = true       -- Make the toggle button visible
+        setupGUIAndDefaults()
 	showNotify("Access Granted. Key lifetime: (" .. lifetime .. " weeks)")
         wait(0.5)
         showNotify("Access granted. Main interface now available.")
