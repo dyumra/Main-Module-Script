@@ -12,10 +12,9 @@ loadstring(game:HttpGet('https://raw.githubusercontent.com/dyumra/Main-Module-Sc
 ## 🔑 - Key
 
 Key to **Access-Script** for Using!
-```lua
-dyumra
+```css
+[dyumra]
 ```
-<font color="red">dyumra</font>
 
 
 🔔 - **Support:** All Executive
