@@ -174,7 +174,7 @@ local keySubmitBtn = Instance.new("TextButton")
 keySubmitBtn.Parent = keyFrame
 keySubmitBtn.Size = UDim2.new(0, 140, 0, 40)
 keySubmitBtn.Position = UDim2.new(0.5, 0, 0.5, 45)
-keySubmitBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+keySubmitBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 keySubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 keySubmitBtn.Font = Enum.Font.GothamBold
 keySubmitBtn.TextSize = 18
@@ -185,7 +185,7 @@ local keySubmitCorner = Instance.new("UICorner", keySubmitBtn)
 keySubmitCorner.CornerRadius = UDim.new(0, 12)
 
 local keySubmitStroke = Instance.new("UIStroke", keySubmitBtn)
-keySubmitStroke.Color = Color3.fromRGB(0, 100, 200)
+keySubmitStroke.Color = Color3.fromRGB(185, 0, 0)
 keySubmitStroke.Thickness = 2
 
 local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
