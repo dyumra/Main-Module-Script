@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 2.19.56 - Authenticated Interface Edition ]] -- Updated Version
+-- [[ 📊 Version: 2.19.44 - Authenticated Interface Edition ]] -- Updated Version
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
@@ -196,13 +196,13 @@ screenGui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 600, 0, 400)
-mainFrame.Position = UDim2.new(0.5, -(mainFrame.Size.X.Offset / 2), 0.5, -(mainFrame.Size.Y.Offset / 2))
+mainFrame.Size = UDim2.new(0, 600, 0, 400) -- Wider and shorter for the new UI
+mainFrame.Position = UDim2.new(0.5, -(mainFrame.Size.X.Offset / 2), 0.5, -(mainFrame.Size.Y.Offset / 2)) -- Center the frame
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BackgroundTransparency = 0
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
-mainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+mainFrame.AnchorPoint = Vector2.new(0.5,0.5) -- Set AnchorPoint to center for easier positioning
 mainFrame.Active = true
 mainFrame.Draggable = false -- Set to false
 mainFrame.Visible = false
@@ -295,11 +295,11 @@ toggleBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = not mainFrame.Visible
 end)
 
-local function createHeader(text, parent)
+local function createHeader(text, parent) -- Removed yPos as UIListLayout handles position
 	local header = Instance.new("TextLabel")
 	header.Parent = parent
 	header.Size = UDim2.new(1, -10, 0, 25) -- Full width of panel minus padding
-	header.Position = UDim2.new(0, 5, 0, 0)
+	header.Position = UDim2.new(0, 5, 0, 0) -- Position property not needed with UIListLayout here
 	header.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	header.TextColor3 = Color3.fromRGB(255, 255, 255)
 	header.Font = Enum.Font.GothamBold
@@ -309,15 +309,15 @@ local function createHeader(text, parent)
 	return header
 end
 
-local function createButton(name, parent)
+local function createButton(name, parent) -- Removed pos as UIListLayout handles position
 	local btn = Instance.new("TextButton")
 	btn.Name = name
 	btn.Size = UDim2.new(1, -10, 0, 35) -- Full width of panel minus padding
-	btn.Position = UDim2.new(0, 5, 0, 0)
+	btn.Position = UDim2.new(0, 5, 0, 0) -- Position property not needed with UIListLayout here
 	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
 	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 14
+	btn.TextSize = 14 -- Slightly smaller text for more buttons
 	btn.Text = name .. ": Off"
 	btn.Parent = parent
 
@@ -331,11 +331,11 @@ local function createButton(name, parent)
 	return btn
 end
 
-local function createTextBox(name, parent, placeholder, initialValue, size)
+local function createTextBox(name, parent, placeholder, initialValue, size) -- Removed pos as UIListLayout handles position
 	local box = Instance.new("TextBox")
 	box.Name = name
 	box.Size = size or UDim2.new(1, -10, 0, 25) -- Full width of panel minus padding
-	box.Position = UDim2.new(0, 5, 0, 0)
+	box.Position = UDim2.new(0, 5, 0, 0) -- Position property not needed with UIListLayout here
 	box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	box.TextColor3 = Color3.fromRGB(200,200,200)
 	box.Font = Enum.Font.GothamBold
@@ -386,8 +386,8 @@ leftColumnLayout.SortOrder = Enum.SortOrder.LayoutOrder
 -- Right Panel for Function Lists
 local rightPanel = Instance.new("Frame")
 rightPanel.Parent = mainFrame
-rightPanel.Size = UDim2.new(1, -160, 1, -40) -- Remaining width, full height
-rightPanel.Position = UDim2.new(0, 155, 0, 30) -- Right of leftColumnFrame, below title bar
+rightPanel.Size = UDim2.new(1, -160, 1, -40) -- Remaining width, full height (mainFrame.Size.X.Offset - leftColumnFrame.Size.X.Offset - padding)
+rightPanel.Position = UDim2.new(0, 155, 0, 30) -- Right of leftColumnFrame, below title bar (leftColumnFrame.Size.X.Offset + padding)
 rightPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 rightPanel.BackgroundTransparency = 0
 rightPanel.BorderSizePixel = 0
@@ -403,14 +403,19 @@ rightPanelLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 -- Category Buttons
 local combatCategoryBtn = createButton("Combat", leftColumnFrame)
+combatCategoryBtn.LayoutOrder = 1
 local visualsCategoryBtn = createButton("Visuals", leftColumnFrame)
+visualsCategoryBtn.LayoutOrder = 2
 local hitboxCategoryBtn = createButton("Hitbox", leftColumnFrame)
+hitboxCategoryBtn.LayoutOrder = 3
 local miscCategoryBtn = createButton("Misc", leftColumnFrame)
+miscCategoryBtn.LayoutOrder = 4
+
 
 -- Combat Panel
 local combatPanel = Instance.new("Frame", rightPanel)
 combatPanel.Name = "CombatPanel"
-combatPanel.Size = UDim2.new(1, 0, 1, 0)
+combatPanel.Size = UDim2.new(1, 0, 1, 0) -- Fill parent
 combatPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 combatPanel.BackgroundTransparency = 1
 combatPanel.Visible = true -- Default active panel
@@ -480,7 +485,7 @@ hitboxBtn.LayoutOrder = 2
 -- Input Frame for Hitbox (horizontal layout within hitboxPanel)
 local hitboxInputFrame = Instance.new("Frame")
 hitboxInputFrame.Parent = hitboxPanel
-hitboxInputFrame.Size = UDim2.new(1, -10, 0, 30) -- Fixed size
+hitboxInputFrame.Size = UDim2.new(1, -10, 0, 30) -- Fixed size relative to parent
 hitboxInputFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 hitboxInputFrame.BackgroundTransparency = 1
 hitboxInputFrame.LayoutOrder = 3
@@ -491,9 +496,9 @@ hitboxInputLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 hitboxInputLayout.FillDirection = Enum.FillDirection.Horizontal
 hitboxInputLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local hitboxInput = createTextBox("HitboxSizeInput", hitboxInputFrame, "Size", hitboxSize, UDim2.new(0, 100, 0, 25))
+local hitboxInput = createTextBox("HitboxSizeInput", hitboxInputFrame, "Size", hitboxSize, UDim2.new(0, 100, 0, 25)) -- Adjusted size
 hitboxInput.LayoutOrder = 1
-local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", hitboxInputFrame, "Trans", hitboxTransparency, UDim2.new(0, 100, 0, 25))
+local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", hitboxInputFrame, "Trans", hitboxTransparency, UDim2.new(0, 100, 0, 25)) -- Adjusted size
 hitboxTransparencyInput.LayoutOrder = 2
 
 local teamCheckHitboxBtn = createButton("Hitbox Team Filter", hitboxPanel)
@@ -526,6 +531,7 @@ speedBtn.LayoutOrder = 4
 
 local speedInputTextBox = createTextBox("SpeedInput", miscPanel, "Speed (e.g. 50)", flyNoclipSpeed, UDim2.new(1, -10, 0, 25))
 speedInputTextBox.LayoutOrder = 5
+
 
 local highlights = {}
 local esp3DBoxFolder = Instance.new("Folder")
@@ -717,7 +723,7 @@ local function applyHitboxToPlayer(p)
 			end
 		end
 	end
-}
+end
 
 local function updateHitboxes()
 	for _, p in pairs(Players:GetPlayers()) do
@@ -743,7 +749,7 @@ local function resetHitboxesForPlayer(p)
 		originalWalkSpeeds[p] = nil
 		appliedHitboxes[p] = nil
 	end
-}
+end
 
 local function resetAllHitboxes()
 	for _, p in pairs(Players:GetPlayers()) do
@@ -1105,7 +1111,7 @@ local function setupGUIAndDefaults()
 	noclipBtn.Text = "Noclip: " .. (noclip and "On" or "Off")
 	headlessBtn.Text = "Headless: " .. (headless and "On" or "Off")
     speedBtn.Text = "Speed: " .. (speedEnabled and "On" or "Off")
-	-- Show initial panel
+	-- Show initial panel (Combat)
 	showPanel(combatPanel)
 end
 
