@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 2.19.55 - Authenticated Interface Edition ]] -- Updated Version
+-- [[ 📊 Version: 2.19.56 - Authenticated Interface Edition ]] -- Updated Version
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
@@ -16,8 +16,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local aimbot = false
 local esp = false
 local espTeamCheck = false
-local esp3D = false -- New: ESP 3D toggle
-local esp3DTeamCheck = false -- New: ESP 3D team check toggle
+local esp3D = false
+local esp3DTeamCheck = false
 local killAll = false
 local hitbox = false
 local hitboxSize = 15
@@ -30,19 +30,19 @@ local teleportTimer = 0
 local lockParts = {"None", "Head", "Torso", "UpperTorso", "HumanoidRootPart"}
 local originalWalkSpeeds = {}
 local appliedHitboxes = {}
-local appliedESP3DBoxes = {} -- New: Table to store applied ESP 3D boxes
+local appliedESP3DBoxes = {}
 
-local noclip = false -- New: Noclip toggle
-local originalCanCollide = {} -- New: Store original CanCollide states for noclip
+local noclip = false
+local originalCanCollide = {}
 
-local headless = false -- New: Headless toggle
+local headless = false
 local originalHeadTransparency = nil
 local originalFaceTransparency = nil
 
-local speedEnabled = false -- New: Speed toggle
-local flyNoclipSpeed = 30 -- Default speed
-local lastValidSpeed = 30 -- Stores the last valid speed input
-local speedConnection = nil -- RunService connection for speed movement
+local speedEnabled = false
+local flyNoclipSpeed = 30
+local lastValidSpeed = 30
+local speedConnection = nil
 
 local currentLockPartIndex = 1
 local lockset = lockParts[currentLockPartIndex]
@@ -56,7 +56,6 @@ local correctKey = "dyumra-k3b7-wp9d-a2n8"
 local maxAttempts = 3
 local currentAttempts = 0
 -- time lifetime
--- (random values, not truly functional for a real lifetime system)
 local lifetimeWeeks = math.random(10000, 12222)
 local lifetimeDays = math.random(1, 31)
 local lifetimeHour = math.random(1, 60)
@@ -197,15 +196,15 @@ screenGui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 600, 0, 400) -- Wider and shorter for the new UI
-mainFrame.Position = UDim2.new(0.5, -(mainFrame.Size.X.Offset / 2), 0.5, -(mainFrame.Size.Y.Offset / 2)) -- Center the frame
+mainFrame.Size = UDim2.new(0, 600, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -(mainFrame.Size.X.Offset / 2), 0.5, -(mainFrame.Size.Y.Offset / 2))
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BackgroundTransparency = 0
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
-mainFrame.AnchorPoint = Vector2.new(0.5,0.5) -- Set AnchorPoint to center for easier positioning
+mainFrame.AnchorPoint = Vector2.new(0.5,0.5)
 mainFrame.Active = true
-mainFrame.Draggable = true
+mainFrame.Draggable = false -- Set to false
 mainFrame.Visible = false
 
 local corner = Instance.new("UICorner", mainFrame)
@@ -229,19 +228,19 @@ titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 titleBar.BorderSizePixel = 0
 titleBar.ZIndex = 2
 titleBar.Active = true
-titleBar.Draggable = true -- Make the title bar draggable
+titleBar.Draggable = false -- Set to false
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Parent = titleBar
-titleLabel.Size = UDim2.new(0, 150, 1, 0)
-titleLabel.Position = UDim2.new(0.05, 0, 0, 0)
+titleLabel.Size = UDim2.new(0, 250, 1, 0) -- Wider to accommodate text
+titleLabel.Position = UDim2.new(0.02, 0, 0, 0) -- Slightly from left edge
 titleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 titleLabel.BackgroundTransparency = 1
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextSize = 18
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Text = "DYHUB V3.02"
+titleLabel.Text = "DYHUB'S - Version 1.19.5" -- Updated Title
 
 -- Minimize Button
 local minimizeBtn = Instance.new("TextButton")
@@ -296,11 +295,11 @@ toggleBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = not mainFrame.Visible
 end)
 
-local function createHeader(text, yPos, parent)
+local function createHeader(text, parent)
 	local header = Instance.new("TextLabel")
 	header.Parent = parent
-	header.Size = UDim2.new(0, 150, 0, 25) -- Adjusted width for left column
-	header.Position = UDim2.new(0, 5, 0, yPos) -- Start from left edge, padding
+	header.Size = UDim2.new(1, -10, 0, 25) -- Full width of panel minus padding
+	header.Position = UDim2.new(0, 5, 0, 0)
 	header.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	header.TextColor3 = Color3.fromRGB(255, 255, 255)
 	header.Font = Enum.Font.GothamBold
@@ -310,17 +309,16 @@ local function createHeader(text, yPos, parent)
 	return header
 end
 
-local function createButton(name, pos, parent)
+local function createButton(name, parent)
 	local btn = Instance.new("TextButton")
 	btn.Name = name
-	btn.Size = UDim2.new(0, 140, 0, 35) -- Adjusted width for left column
-	btn.Position = pos
+	btn.Size = UDim2.new(1, -10, 0, 35) -- Full width of panel minus padding
+	btn.Position = UDim2.new(0, 5, 0, 0)
 	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
 	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 14 -- Slightly smaller text for more buttons
+	btn.TextSize = 14
 	btn.Text = name .. ": Off"
-	btn.AnchorPoint = Vector2.new(0, 0)
 	btn.Parent = parent
 
 	local corner = Instance.new("UICorner", btn)
@@ -333,11 +331,11 @@ local function createButton(name, pos, parent)
 	return btn
 end
 
-local function createTextBox(name, pos, parent, placeholder, initialValue, size)
+local function createTextBox(name, parent, placeholder, initialValue, size)
 	local box = Instance.new("TextBox")
 	box.Name = name
-	box.Size = size or UDim2.new(0, 140, 0, 25) -- Adjusted width/height for left column
-	box.Position = pos
+	box.Size = size or UDim2.new(1, -10, 0, 25) -- Full width of panel minus padding
+	box.Position = UDim2.new(0, 5, 0, 0)
 	box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	box.TextColor3 = Color3.fromRGB(200,200,200)
 	box.Font = Enum.Font.GothamBold
@@ -345,7 +343,6 @@ local function createTextBox(name, pos, parent, placeholder, initialValue, size)
 	box.PlaceholderText = placeholder or ""
 	box.Text = tostring(initialValue or "")
 	box.ClearTextOnFocus = false
-	box.AnchorPoint = Vector2.new(0, 0)
 	box.Parent = parent
 
 	local corner = Instance.new("UICorner", box)
@@ -356,9 +353,6 @@ local function createTextBox(name, pos, parent, placeholder, initialValue, size)
 	stroke.Thickness = 1
 	return box
 end
-
--- GUI Elements Reorganized for Left Column
-local currentY = 40 -- Start below the title bar
 
 -- DYHUB text at the bottom left
 local dyhubLabel = Instance.new("TextLabel")
@@ -373,6 +367,7 @@ dyhubLabel.TextSize = 12
 dyhubLabel.TextXAlignment = Enum.TextXAlignment.Left
 dyhubLabel.Text = "DYHUB"
 
+-- Left Column for Category Buttons
 local leftColumnFrame = Instance.new("Frame")
 leftColumnFrame.Parent = mainFrame
 leftColumnFrame.Size = UDim2.new(0, 150, 1, -40) -- Fixed width, takes most of height
@@ -388,41 +383,107 @@ leftColumnLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 leftColumnLayout.FillDirection = Enum.FillDirection.Vertical
 leftColumnLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Combat Settings
-local combatHeader = createHeader("Combat", 0, leftColumnFrame) -- Layout handles Y
+-- Right Panel for Function Lists
+local rightPanel = Instance.new("Frame")
+rightPanel.Parent = mainFrame
+rightPanel.Size = UDim2.new(1, -160, 1, -40) -- Remaining width, full height
+rightPanel.Position = UDim2.new(0, 155, 0, 30) -- Right of leftColumnFrame, below title bar
+rightPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+rightPanel.BackgroundTransparency = 0
+rightPanel.BorderSizePixel = 0
+rightPanel.ClipsDescendants = true
+
+local rightPanelCorner = Instance.new("UICorner", rightPanel)
+rightPanelCorner.CornerRadius = UDim.new(0, 8)
+
+local rightPanelLayout = Instance.new("UIPageLayout", rightPanel) -- Use UIPageLayout to manage panels
+rightPanelLayout.Padding = UDim.new(0, 10) -- Padding for content inside panels
+rightPanelLayout.FillDirection = Enum.FillDirection.Vertical
+rightPanelLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- Category Buttons
+local combatCategoryBtn = createButton("Combat", leftColumnFrame)
+local visualsCategoryBtn = createButton("Visuals", leftColumnFrame)
+local hitboxCategoryBtn = createButton("Hitbox", leftColumnFrame)
+local miscCategoryBtn = createButton("Misc", leftColumnFrame)
+
+-- Combat Panel
+local combatPanel = Instance.new("Frame", rightPanel)
+combatPanel.Name = "CombatPanel"
+combatPanel.Size = UDim2.new(1, 0, 1, 0)
+combatPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+combatPanel.BackgroundTransparency = 1
+combatPanel.Visible = true -- Default active panel
+
+local combatPanelLayout = Instance.new("UIListLayout", combatPanel)
+combatPanelLayout.Padding = UDim.new(0, 5)
+combatPanelLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+combatPanelLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+combatPanelLayout.FillDirection = Enum.FillDirection.Vertical
+combatPanelLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local combatHeader = createHeader("Combat Settings", combatPanel)
 combatHeader.LayoutOrder = 1
-local aimbotBtn = createButton("Aimbot", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+local aimbotBtn = createButton("Aimbot", combatPanel)
 aimbotBtn.LayoutOrder = 2
-local lockBtn = createButton("Target Lock", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+local lockBtn = createButton("Target Lock", combatPanel)
 lockBtn.LayoutOrder = 3
-local teleportLoopBtn = createButton("Teleport Loop", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+local teleportLoopBtn = createButton("Teleport Loop", combatPanel)
 teleportLoopBtn.LayoutOrder = 4
 
--- Visual Enhancements
-local visualHeader = createHeader("Visuals", 0, leftColumnFrame)
-visualHeader.LayoutOrder = 5
-local espBtn = createButton("Player ESP", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-espBtn.LayoutOrder = 6
-local espTeamBtn = createButton("ESP Team Filter", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-espTeamBtn.LayoutOrder = 7
-local esp3DBtn = createButton("ESP 3D", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-esp3DBtn.LayoutOrder = 8
-local esp3DTeamBtn = createButton("ESP 3D Team Filter", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-esp3DTeamBtn.LayoutOrder = 9
+-- Visuals Panel
+local visualsPanel = Instance.new("Frame", rightPanel)
+visualsPanel.Name = "VisualsPanel"
+visualsPanel.Size = UDim2.new(1, 0, 1, 0)
+visualsPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+visualsPanel.BackgroundTransparency = 1
+visualsPanel.Visible = false
 
--- Hitbox Modifiers
-local hitboxHeader = createHeader("Hitbox", 0, leftColumnFrame)
-hitboxHeader.LayoutOrder = 10
-local hitboxBtn = createButton("Hitbox Enhance", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-hitboxBtn.LayoutOrder = 11
+local visualsPanelLayout = Instance.new("UIListLayout", visualsPanel)
+visualsPanelLayout.Padding = UDim.new(0, 5)
+visualsPanelLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+visualsPanelLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+visualsPanelLayout.FillDirection = Enum.FillDirection.Vertical
+visualsPanelLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Input Frame for Hitbox (horizontal layout within left column)
+local visualHeader = createHeader("Visual Enhancements", visualsPanel)
+visualHeader.LayoutOrder = 1
+local espBtn = createButton("Player ESP", visualsPanel)
+espBtn.LayoutOrder = 2
+local espTeamBtn = createButton("ESP Team Filter", visualsPanel)
+espTeamBtn.LayoutOrder = 3
+local esp3DBtn = createButton("ESP 3D", visualsPanel)
+esp3DBtn.LayoutOrder = 4
+local esp3DTeamBtn = createButton("ESP 3D Team Filter", visualsPanel)
+esp3DTeamBtn.LayoutOrder = 5
+
+-- Hitbox Panel
+local hitboxPanel = Instance.new("Frame", rightPanel)
+hitboxPanel.Name = "HitboxPanel"
+hitboxPanel.Size = UDim2.new(1, 0, 1, 0)
+hitboxPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+hitboxPanel.BackgroundTransparency = 1
+hitboxPanel.Visible = false
+
+local hitboxPanelLayout = Instance.new("UIListLayout", hitboxPanel)
+hitboxPanelLayout.Padding = UDim.new(0, 5)
+hitboxPanelLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+hitboxPanelLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+hitboxPanelLayout.FillDirection = Enum.FillDirection.Vertical
+hitboxPanelLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local hitboxHeader = createHeader("Hitbox Modifiers", hitboxPanel)
+hitboxHeader.LayoutOrder = 1
+local hitboxBtn = createButton("Hitbox Enhance", hitboxPanel)
+hitboxBtn.LayoutOrder = 2
+
+-- Input Frame for Hitbox (horizontal layout within hitboxPanel)
 local hitboxInputFrame = Instance.new("Frame")
-hitboxInputFrame.Parent = leftColumnFrame
-hitboxInputFrame.Size = UDim2.new(0, 140, 0, 30) -- Fixed size
-hitboxInputFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+hitboxInputFrame.Parent = hitboxPanel
+hitboxInputFrame.Size = UDim2.new(1, -10, 0, 30) -- Fixed size
+hitboxInputFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 hitboxInputFrame.BackgroundTransparency = 1
-hitboxInputFrame.LayoutOrder = 12
+hitboxInputFrame.LayoutOrder = 3
 
 local hitboxInputLayout = Instance.new("UIListLayout", hitboxInputFrame)
 hitboxInputLayout.Padding = UDim.new(0, 5)
@@ -430,34 +491,46 @@ hitboxInputLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 hitboxInputLayout.FillDirection = Enum.FillDirection.Horizontal
 hitboxInputLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local hitboxInput = createTextBox("HitboxSizeInput", UDim2.new(0, 0, 0, 0), hitboxInputFrame, "Size", hitboxSize, UDim2.new(0, 65, 0, 25))
+local hitboxInput = createTextBox("HitboxSizeInput", hitboxInputFrame, "Size", hitboxSize, UDim2.new(0, 100, 0, 25))
 hitboxInput.LayoutOrder = 1
-local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", UDim2.new(0, 0, 0, 0), hitboxInputFrame, "Trans", hitboxTransparency, UDim2.new(0, 65, 0, 25))
+local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", hitboxInputFrame, "Trans", hitboxTransparency, UDim2.new(0, 100, 0, 25))
 hitboxTransparencyInput.LayoutOrder = 2
 
-local teamCheckHitboxBtn = createButton("Hitbox Team Filter", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-teamCheckHitboxBtn.LayoutOrder = 13
+local teamCheckHitboxBtn = createButton("Hitbox Team Filter", hitboxPanel)
+teamCheckHitboxBtn.LayoutOrder = 4
 
--- Misc Enhancements
-local MiscHeader = createHeader("Misc", 0, leftColumnFrame)
-MiscHeader.LayoutOrder = 14
-local headlessBtn = createButton("Headless", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-headlessBtn.LayoutOrder = 15
-local noclipBtn = createButton("Noclip", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-noclipBtn.LayoutOrder = 16
+-- Misc Panel
+local miscPanel = Instance.new("Frame", rightPanel)
+miscPanel.Name = "MiscPanel"
+miscPanel.Size = UDim2.new(1, 0, 1, 0)
+miscPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+miscPanel.BackgroundTransparency = 1
+miscPanel.Visible = false
 
--- New: Speed Button and Input
-local speedBtn = createButton("Speed", UDim2.new(0, 0, 0, 0), leftColumnFrame)
-speedBtn.LayoutOrder = 17
+local miscPanelLayout = Instance.new("UIListLayout", miscPanel)
+miscPanelLayout.Padding = UDim.new(0, 5)
+miscPanelLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+miscPanelLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+miscPanelLayout.FillDirection = Enum.FillDirection.Vertical
+miscPanelLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local speedInputTextBox = createTextBox("SpeedInput", UDim2.new(0, 0, 0, 0), leftColumnFrame, "Speed (e.g. 50)", flyNoclipSpeed, UDim2.new(0, 140, 0, 25))
-speedInputTextBox.LayoutOrder = 18
+local MiscHeader = createHeader("Misc Enhancements", miscPanel)
+MiscHeader.LayoutOrder = 1
+local headlessBtn = createButton("Headless", miscPanel)
+headlessBtn.LayoutOrder = 2
+local noclipBtn = createButton("Noclip", miscPanel)
+noclipBtn.LayoutOrder = 3
 
+local speedBtn = createButton("Speed", miscPanel)
+speedBtn.LayoutOrder = 4
+
+local speedInputTextBox = createTextBox("SpeedInput", miscPanel, "Speed (e.g. 50)", flyNoclipSpeed, UDim2.new(1, -10, 0, 25))
+speedInputTextBox.LayoutOrder = 5
 
 local highlights = {}
 local esp3DBoxFolder = Instance.new("Folder")
 esp3DBoxFolder.Name = "ESP3DBoxes"
-esp3DBoxFolder.Parent = Camera -- Parent to camera to always be visible (client-side)
+esp3DBoxFolder.Parent = Camera
 
 
 local function updateHighlights()
@@ -515,8 +588,8 @@ local function createESP3DBox(character)
 	local box = Instance.new("BoxHandleAdornment")
 	box.Name = "ESP3DBox"
 	box.Adornee = humanoidRootPart
-	box.Size = Vector3.new(4, 6, 4) -- Approximate size to fit around a character
-	box.Color3 = Color3.fromRGB(0, 255, 0) -- Green box
+	box.Size = Vector3.new(4, 6, 4)
+	box.Color3 = Color3.fromRGB(0, 255, 0)
 	box.Transparency = 0.5
 	box.AlwaysOnTop = true
 	box.ZIndex = 10
@@ -559,7 +632,7 @@ local function updateESP3DBoxes()
 		if p ~= player then
 			applyESP3DBox(p)
 		else
-			removeESP3DBox(p) -- Ensure local player's box is removed
+			removeESP3DBox(p)
 		end
 	end
 end
@@ -586,7 +659,6 @@ local function getClosestVisibleTarget()
 	local closestPlayer = nil
 	for _, plr in pairs(Players:GetPlayers()) do
 		if plr ~= player and plr.Character and plr.Character:FindFirstChild(lockset) and plr.Character:FindFirstChild("Humanoid") then
-			-- Aimbot: Exclude teammates if player has a team
 			if player.Team and plr.Team and plr.Team == player.Team then
 				continue
 			end
@@ -608,7 +680,7 @@ local function getClosestVisibleTarget()
 		end
 	end
 	return closestPlayer
-end
+}
 
 local function getRandomLivingTarget()
 	local validTargets = {}
@@ -621,7 +693,7 @@ local function getRandomLivingTarget()
 		return validTargets[math.random(1, #validTargets)]
 	end
 	return nil
-end
+}
 
 local function applyHitboxToPlayer(p)
 	if hitbox and p ~= player and p.Character then
@@ -645,7 +717,7 @@ local function applyHitboxToPlayer(p)
 			end
 		end
 	end
-end
+}
 
 local function updateHitboxes()
 	for _, p in pairs(Players:GetPlayers()) do
@@ -671,7 +743,7 @@ local function resetHitboxesForPlayer(p)
 		originalWalkSpeeds[p] = nil
 		appliedHitboxes[p] = nil
 	end
-end
+}
 
 local function resetAllHitboxes()
 	for _, p in pairs(Players:GetPlayers()) do
@@ -722,12 +794,11 @@ local function updateLockBtn()
 	lockBtn.Text = "Target Lock: " .. (lockset or "None")
 end
 
--- New: Noclip functions
 local function applyNoclip()
 	if player.Character then
 		for _, part in ipairs(player.Character:GetChildren()) do
 			if part:IsA("BasePart") then
-				originalCanCollide[part] = part.CanCollide -- Store original state
+				originalCanCollide[part] = part.CanCollide
 				part.CanCollide = false
 			end
 		end
@@ -739,7 +810,7 @@ local function disableNoclip()
 	if player.Character then
 		for _, part in ipairs(player.Character:GetChildren()) do
 			if part:IsA("BasePart") and originalCanCollide[part] ~= nil then
-				part.CanCollide = originalCanCollide[part] -- Restore original state
+				part.CanCollide = originalCanCollide[part]
 				originalCanCollide[part] = nil
 			end
 		end
@@ -747,7 +818,6 @@ local function disableNoclip()
 	end
 end
 
--- New: Headless functions
 local function applyHeadless()
 	if player.Character then
 		local head = player.Character:FindFirstChild("Head")
@@ -780,7 +850,30 @@ local function restoreHead()
 	end
 end
 
--- Connect GUI button events
+-- Function to switch active panel
+local function showPanel(panel)
+	rightPanelLayout:JumpTo(panel)
+end
+
+-- Connect category buttons to panel switching
+combatCategoryBtn.MouseButton1Click:Connect(function()
+	showPanel(combatPanel)
+end)
+
+visualsCategoryBtn.MouseButton1Click:Connect(function()
+	showPanel(visualsPanel)
+end)
+
+hitboxCategoryBtn.MouseButton1Click:Connect(function()
+	showPanel(hitboxPanel)
+end)
+
+miscCategoryBtn.MouseButton1Click:Connect(function()
+	showPanel(miscPanel)
+end)
+
+
+-- Connect GUI button events for functions
 aimbotBtn.MouseButton1Click:Connect(function()
 	aimbot = not aimbot
 	aimbotBtn.Text = "Aimbot: " .. (aimbot and "On" or "Off")
@@ -814,7 +907,7 @@ espTeamBtn.MouseButton1Click:Connect(function()
 	updateHighlights()
 end)
 
-esp3DBtn.MouseButton1Click:Connect(function() -- New ESP 3D toggle handler
+esp3DBtn.MouseButton1Click:Connect(function()
 	esp3D = not esp3D
 	esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off")
 	if esp3D then
@@ -828,7 +921,7 @@ esp3DBtn.MouseButton1Click:Connect(function() -- New ESP 3D toggle handler
 	end
 end)
 
-esp3DTeamBtn.MouseButton1Click:Connect(function() -- New ESP 3D Team Filter handler
+esp3DTeamBtn.MouseButton1Click:Connect(function()
 	esp3DTeamCheck = not esp3DTeamCheck
 	esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
 	if esp3DTeamCheck then
@@ -930,7 +1023,6 @@ teamCheckHitboxBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- New: Noclip Button Click
 noclipBtn.MouseButton1Click:Connect(function()
 	noclip = not noclip
 	noclipBtn.Text = "Noclip: " .. (noclip and "On" or "Off")
@@ -941,7 +1033,6 @@ noclipBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- New: Headless Button Click
 headlessBtn.MouseButton1Click:Connect(function()
 	headless = not headless
 	headlessBtn.Text = "Headless: " .. (headless and "On" or "Off")
@@ -952,7 +1043,6 @@ headlessBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- New: Speed Button Click
 speedBtn.MouseButton1Click:Connect(function()
     speedEnabled = not speedEnabled
     if speedEnabled then
@@ -965,7 +1055,6 @@ speedBtn.MouseButton1Click:Connect(function()
             flyNoclipSpeed = lastValidSpeed
             speedInputTextBox.Text = tostring(lastValidSpeed)
         end
-        -- Start Speed movement
         if speedConnection then
             speedConnection:Disconnect()
             speedConnection = nil
@@ -987,13 +1076,12 @@ speedBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- New: Speed Input Text Box FocusLost
 speedInputTextBox.FocusLost:Connect(function(enterPressed)
 	if enterPressed then
 		local val = tonumber(speedInputTextBox.Text)
 		if val and val > 0 then
 			lastValidSpeed = val
-			if speedEnabled then -- Apply new speed immediately if enabled
+			if speedEnabled then
 				flyNoclipSpeed = val
 				showNotify("Speed updated to: " .. flyNoclipSpeed)
 			else
@@ -1010,13 +1098,15 @@ end)
 local function setupGUIAndDefaults()
 	updateLockBtn()
 	espTeamBtn.Text = "Player ESP: Team Filter: " .. (espTeamCheck and "On" or "Off")
-	esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off") -- Set initial text for ESP 3D
-	esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off") -- Set initial text for ESP 3D Team Filter
+	esp3DBtn.Text = "ESP 3D: " .. (esp3D and "On" or "Off")
+	esp3DTeamBtn.Text = "ESP 3D: Team Filter: " .. (esp3DTeamCheck and "On" or "Off")
 	teamCheckHitboxBtn.Text = "Hitbox Team Filter: " .. (teamCheckHitbox and "On" or "Off")
 	teleportLoopBtn.Text = "Teleport Loop: " .. (killAll and "On" or "Off")
-	noclipBtn.Text = "Noclip: " .. (noclip and "On" or "Off") -- Set initial text for Noclip
-	headlessBtn.Text = "Headless: " .. (headless and "On" or "Off") -- Set initial text for Headless
-    speedBtn.Text = "Speed: " .. (speedEnabled and "On" or "Off") -- Set initial text for Speed
+	noclipBtn.Text = "Noclip: " .. (noclip and "On" or "Off")
+	headlessBtn.Text = "Headless: " .. (headless and "On" or "Off")
+    speedBtn.Text = "Speed: " .. (speedEnabled and "On" or "Off")
+	-- Show initial panel
+	showPanel(combatPanel)
 end
 
 Players.PlayerAdded:Connect(function(newPlayer)
@@ -1024,20 +1114,18 @@ Players.PlayerAdded:Connect(function(newPlayer)
 		if hitbox then
 			applyHitboxToPlayer(newPlayer)
 		end
-		if esp3D then -- New: Apply ESP 3D when new player character added
+		if esp3D then
 			applyESP3DBox(newPlayer)
 		end
-		if noclip and newPlayer == player then -- Reapply noclip if character respawns
-			disableNoclip() -- Clear previous state first
+		if noclip and newPlayer == player then
+			disableNoclip()
 			applyNoclip()
 		end
-		if headless and newPlayer == player then -- Reapply headless if character respawns
-			restoreHead() -- Clear previous state first
+		if headless and newPlayer == player then
+			restoreHead()
 			applyHeadless()
 		end
-        -- No need to reapply speed here, as it's controlled by RunService.RenderStepped
 	end)
-	-- Initial ESP 3D update for newly added player if esp3D is active
 	if esp3D then
 		applyESP3DBox(newPlayer)
 	end
@@ -1050,7 +1138,7 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 	if appliedHitboxes[leavingPlayer] then
 		appliedHitboxes[leavingPlayer] = nil
 	end
-	removeESP3DBox(leavingPlayer) -- New: Remove ESP 3D box when player leaves
+	removeESP3DBox(leavingPlayer)
 	if currentAimbotTarget == leavingPlayer then
 		currentAimbotTarget = nil
 	end
@@ -1124,21 +1212,19 @@ RunService.RenderStepped:Connect(function(dt)
 	if esp then
 		updateHighlights()
 	end
-	if esp3D then -- New: Update ESP 3D boxes
+	if esp3D then
 		updateESP3DBoxes()
 	end
 
-	-- New: Noclip continuous application
 	if noclip and player.Character then
 		for _, part in ipairs(player.Character:GetChildren()) do
-			if part:IsA("BasePart") and part.CanCollide then -- Only modify if it's currently collidable
-				originalCanCollide[part] = part.CanCollide -- Ensure original state is always recent
+			if part:IsA("BasePart") and part.CanCollide then
+				originalCanCollide[part] = part.CanCollide
 				part.CanCollide = false
 			end
 		end
 	end
 
-	-- New: Headless continuous application
 	if headless and player.Character then
 		local head = player.Character:FindFirstChild("Head")
 		local face = head and (head:FindFirstChildOfClass("Decal") or head:FindFirstChildOfClass("SpecialMesh"))
@@ -1159,5 +1245,5 @@ showNotify("Please authenticate your access key to proceed.")
 while true do
 	wait(1)
 	if mainFrame.Visible and esp then updateHighlights() end
-	if esp3D then updateESP3DBoxes() end -- New: Always update ESP 3D boxes if enabled, regardless of GUI visibility
+	if esp3D then updateESP3DBoxes() end
 end
