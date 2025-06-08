@@ -1,9 +1,11 @@
 -- [[ Open Source Code !!! ]]
 
 -- [[ ⚙️ Roblox Execution Module ]]
--- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 2.19.44 - Authenticated Interface Edition ]] -- Updated Version
+-- [[ 🔮 Powered by Dyumra's Innovations ]]\
+-- [[ 📊 Version: 2.19.0 - Authenticated Interface Edition ]] -- Updated Version
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
+
+print("Script started: Initializing variables.")
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -61,6 +63,8 @@ local lifetimeDays = math.random(1, 31)
 local lifetimeHour = math.random(1, 60)
 local lifetimeSec = math.random(1, 60)
 
+print("Variables initialized. Defining helper functions.")
+
 local function detectLockSet(character)
 	if character:FindFirstChild("Torso") then
 		return "Torso"
@@ -106,11 +110,16 @@ local function kickPlayer(reason)
 	end
 end
 
-wait(0.1)
+print("Helper functions defined. Waiting for PlayerGui.")
+-- It's crucial to wait for PlayerGui as the script runs on the client.
+local playerGui = player:WaitForChild("PlayerGui")
+print("PlayerGui found. Creating KeyInputGui.")
 
-local keyInputGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local keyInputGui = Instance.new("ScreenGui")
 keyInputGui.Name = "KeyInputGui"
 keyInputGui.ResetOnSpawn = false
+keyInputGui.Parent = playerGui -- Parent directly to PlayerGui
+print("KeyInputGui created and parented.")
 
 local keyFrame = Instance.new("Frame")
 keyFrame.Parent = keyInputGui
@@ -190,9 +199,13 @@ local keySubmitStroke = Instance.new("UIStroke", keySubmitBtn)
 keySubmitStroke.Color = Color3.fromRGB(180, 0, 0)
 keySubmitStroke.Thickness = 2
 
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+print("KeyInputGui components created. Creating main AimbotESPGui.")
+
+local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "AimbotESPGui"
 screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui -- Parent directly to PlayerGui
+print("AimbotESPGui created and parented. It is currently invisible.")
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Parent = screenGui
@@ -205,7 +218,7 @@ mainFrame.ClipsDescendants = true
 mainFrame.AnchorPoint = Vector2.new(0.5,0.5) -- Set AnchorPoint to center for easier positioning
 mainFrame.Active = true
 mainFrame.Draggable = false -- Set to false
-mainFrame.Visible = false
+mainFrame.Visible = false -- Start as invisible
 
 local corner = Instance.new("UICorner", mainFrame)
 corner.CornerRadius = UDim.new(0, 12)
@@ -270,6 +283,7 @@ closeBtn.ZIndex = 3
 
 closeBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = false
+    print("Main Frame Visibility set to false.")
 end)
 
 
@@ -282,7 +296,7 @@ toggleBtn.Font = Enum.Font.GothamBold
 toggleBtn.TextSize = 16
 toggleBtn.Text = "MENU"
 toggleBtn.AnchorPoint = Vector2.new(0,0)
-toggleBtn.Visible = false
+toggleBtn.Visible = false -- Starts invisible, only visible after authentication
 
 local toggleCorner = Instance.new("UICorner", toggleBtn)
 toggleCorner.CornerRadius = UDim.new(0, 8)
@@ -293,13 +307,14 @@ toggleStroke.Thickness = 1
 
 toggleBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = not mainFrame.Visible
+    print("Toggle button clicked. Main Frame Visible: " .. tostring(mainFrame.Visible))
 end)
 
-local function createHeader(text, parent) -- Removed yPos as UIListLayout handles position
+local function createHeader(text, parent)
 	local header = Instance.new("TextLabel")
 	header.Parent = parent
-	header.Size = UDim2.new(1, -10, 0, 25) -- Full width of panel minus padding
-	header.Position = UDim2.new(0, 5, 0, 0) -- Position property not needed with UIListLayout here
+	header.Size = UDim2.new(1, -10, 0, 25)
+	header.Position = UDim2.new(0, 5, 0, 0)
 	header.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	header.TextColor3 = Color3.fromRGB(255, 255, 255)
 	header.Font = Enum.Font.GothamBold
@@ -309,15 +324,15 @@ local function createHeader(text, parent) -- Removed yPos as UIListLayout handle
 	return header
 end
 
-local function createButton(name, parent) -- Removed pos as UIListLayout handles position
+local function createButton(name, parent)
 	local btn = Instance.new("TextButton")
 	btn.Name = name
-	btn.Size = UDim2.new(1, -10, 0, 35) -- Full width of panel minus padding
-	btn.Position = UDim2.new(0, 5, 0, 0) -- Position property not needed with UIListLayout here
+	btn.Size = UDim2.new(1, -10, 0, 35)
+	btn.Position = UDim2.new(0, 5, 0, 0)
 	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
 	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 14 -- Slightly smaller text for more buttons
+	btn.TextSize = 14
 	btn.Text = name .. ": Off"
 	btn.Parent = parent
 
@@ -331,11 +346,11 @@ local function createButton(name, parent) -- Removed pos as UIListLayout handles
 	return btn
 end
 
-local function createTextBox(name, parent, placeholder, initialValue, size) -- Removed pos as UIListLayout handles position
+local function createTextBox(name, parent, placeholder, initialValue, size)
 	local box = Instance.new("TextBox")
 	box.Name = name
-	box.Size = size or UDim2.new(1, -10, 0, 25) -- Full width of panel minus padding
-	box.Position = UDim2.new(0, 5, 0, 0) -- Position property not needed with UIListLayout here
+	box.Size = size or UDim2.new(1, -10, 0, 25)
+	box.Position = UDim2.new(0, 5, 0, 0)
 	box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	box.TextColor3 = Color3.fromRGB(200,200,200)
 	box.Font = Enum.Font.GothamBold
@@ -354,11 +369,13 @@ local function createTextBox(name, parent, placeholder, initialValue, size) -- R
 	return box
 end
 
+print("Core UI creation functions defined. Starting main layout creation.")
+
 -- DYHUB text at the bottom left
 local dyhubLabel = Instance.new("TextLabel")
 dyhubLabel.Parent = mainFrame
 dyhubLabel.Size = UDim2.new(0, 100, 0, 20)
-dyhubLabel.Position = UDim2.new(0, 5, 1, -25) -- Position at bottom-left
+dyhubLabel.Position = UDim2.new(0, 5, 1, -25)
 dyhubLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 dyhubLabel.BackgroundTransparency = 1
 dyhubLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -370,8 +387,8 @@ dyhubLabel.Text = "DYHUB"
 -- Left Column for Category Buttons
 local leftColumnFrame = Instance.new("Frame")
 leftColumnFrame.Parent = mainFrame
-leftColumnFrame.Size = UDim2.new(0, 150, 1, -40) -- Fixed width, takes most of height
-leftColumnFrame.Position = UDim2.new(0, 0, 0, 30) -- Below title bar
+leftColumnFrame.Size = UDim2.new(0, 150, 1, -40)
+leftColumnFrame.Position = UDim2.new(0, 0, 0, 30)
 leftColumnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 leftColumnFrame.BackgroundTransparency = 1
 leftColumnFrame.ClipsDescendants = true
@@ -386,8 +403,8 @@ leftColumnLayout.SortOrder = Enum.SortOrder.LayoutOrder
 -- Right Panel for Function Lists
 local rightPanel = Instance.new("Frame")
 rightPanel.Parent = mainFrame
-rightPanel.Size = UDim2.new(1, -160, 1, -40) -- Remaining width, full height (mainFrame.Size.X.Offset - leftColumnFrame.Size.X.Offset - padding)
-rightPanel.Position = UDim2.new(0, 155, 0, 30) -- Right of leftColumnFrame, below title bar (leftColumnFrame.Size.X.Offset + padding)
+rightPanel.Size = UDim2.new(1, -160, 1, -40)
+rightPanel.Position = UDim2.new(0, 155, 0, 30)
 rightPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 rightPanel.BackgroundTransparency = 0
 rightPanel.BorderSizePixel = 0
@@ -396,10 +413,12 @@ rightPanel.ClipsDescendants = true
 local rightPanelCorner = Instance.new("UICorner", rightPanel)
 rightPanelCorner.CornerRadius = UDim.new(0, 8)
 
-local rightPanelLayout = Instance.new("UIPageLayout", rightPanel) -- Use UIPageLayout to manage panels
-rightPanelLayout.Padding = UDim.new(0, 10) -- Padding for content inside panels
+local rightPanelLayout = Instance.new("UIPageLayout", rightPanel)
+rightPanelLayout.Padding = UDim.new(0, 10)
 rightPanelLayout.FillDirection = Enum.FillDirection.Vertical
 rightPanelLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+print("Category buttons and panels creation initiated.")
 
 -- Category Buttons
 local combatCategoryBtn = createButton("Combat", leftColumnFrame)
@@ -411,14 +430,13 @@ hitboxCategoryBtn.LayoutOrder = 3
 local miscCategoryBtn = createButton("Misc", leftColumnFrame)
 miscCategoryBtn.LayoutOrder = 4
 
-
 -- Combat Panel
 local combatPanel = Instance.new("Frame", rightPanel)
 combatPanel.Name = "CombatPanel"
-combatPanel.Size = UDim2.new(1, 0, 1, 0) -- Fill parent
+combatPanel.Size = UDim2.new(1, 0, 1, 0)
 combatPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 combatPanel.BackgroundTransparency = 1
-combatPanel.Visible = true -- Default active panel
+combatPanel.Visible = true
 
 local combatPanelLayout = Instance.new("UIListLayout", combatPanel)
 combatPanelLayout.Padding = UDim.new(0, 5)
@@ -485,7 +503,7 @@ hitboxBtn.LayoutOrder = 2
 -- Input Frame for Hitbox (horizontal layout within hitboxPanel)
 local hitboxInputFrame = Instance.new("Frame")
 hitboxInputFrame.Parent = hitboxPanel
-hitboxInputFrame.Size = UDim2.new(1, -10, 0, 30) -- Fixed size relative to parent
+hitboxInputFrame.Size = UDim2.new(1, -10, 0, 30)
 hitboxInputFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 hitboxInputFrame.BackgroundTransparency = 1
 hitboxInputFrame.LayoutOrder = 3
@@ -496,9 +514,9 @@ hitboxInputLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 hitboxInputLayout.FillDirection = Enum.FillDirection.Horizontal
 hitboxInputLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local hitboxInput = createTextBox("HitboxSizeInput", hitboxInputFrame, "Size", hitboxSize, UDim2.new(0, 100, 0, 25)) -- Adjusted size
+local hitboxInput = createTextBox("HitboxSizeInput", hitboxInputFrame, "Size", hitboxSize, UDim2.new(0, 100, 0, 25))
 hitboxInput.LayoutOrder = 1
-local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", hitboxInputFrame, "Trans", hitboxTransparency, UDim2.new(0, 100, 0, 25)) -- Adjusted size
+local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", hitboxInputFrame, "Trans", hitboxTransparency, UDim2.new(0, 100, 0, 25))
 hitboxTransparencyInput.LayoutOrder = 2
 
 local teamCheckHitboxBtn = createButton("Hitbox Team Filter", hitboxPanel)
@@ -532,6 +550,7 @@ speedBtn.LayoutOrder = 4
 local speedInputTextBox = createTextBox("SpeedInput", miscPanel, "Speed (e.g. 50)", flyNoclipSpeed, UDim2.new(1, -10, 0, 25))
 speedInputTextBox.LayoutOrder = 5
 
+print("All UI elements created. Initializing highlights and ESP folders.")
 
 local highlights = {}
 local esp3DBoxFolder = Instance.new("Folder")
@@ -858,6 +877,7 @@ end
 
 -- Function to switch active panel
 local function showPanel(panel)
+    print("Switching to panel: " .. panel.Name)
 	rightPanelLayout:JumpTo(panel)
 end
 
@@ -1100,6 +1120,7 @@ speedInputTextBox.FocusLost:Connect(function(enterPressed)
 	end
 end)
 
+print("Connecting player events and setting up GUI defaults.")
 
 local function setupGUIAndDefaults()
 	updateLockBtn()
@@ -1113,10 +1134,13 @@ local function setupGUIAndDefaults()
     speedBtn.Text = "Speed: " .. (speedEnabled and "On" or "Off")
 	-- Show initial panel (Combat)
 	showPanel(combatPanel)
+    print("GUI defaults set. Combat panel displayed.")
 end
 
 Players.PlayerAdded:Connect(function(newPlayer)
+    print("PlayerAdded event triggered for: " .. newPlayer.Name)
 	newPlayer.CharacterAdded:Connect(function(char)
+        print("CharacterAdded event triggered for: " .. newPlayer.Name)
 		if hitbox then
 			applyHitboxToPlayer(newPlayer)
 		end
@@ -1138,6 +1162,7 @@ Players.PlayerAdded:Connect(function(newPlayer)
 end)
 
 Players.PlayerRemoving:Connect(function(leavingPlayer)
+    print("PlayerRemoving event triggered for: " .. leavingPlayer.Name)
 	if originalWalkSpeeds[leavingPlayer] then
 		originalWalkSpeeds[leavingPlayer] = nil
 	end
@@ -1154,12 +1179,16 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
 	updateHighlights()
 end)
 
+print("Checking access key.")
 local function checkKey()
 	local enteredKey = keyInputBox.Text:lower()
+    print("Entered key: " .. enteredKey)
 	if enteredKey == correctKey or enteredKey == "dev" then
 		keyInputGui:Destroy()
+        print("KeyInputGui destroyed.")
 		mainFrame.Visible = true
 		toggleBtn.Visible = true
+        print("Main GUI and Toggle button set to visible.")
 		setupGUIAndDefaults()
 		showNotify("Access Granted. Key lifetime: " .. lifetimeWeeks .. " attempt(Weeks), (Days: " .. lifetimeDays .. "), (Hour: " .. lifetimeHour .. "), (Sec: " .. lifetimeSec .. ") remaining.")
 		wait(0.5)
@@ -1167,6 +1196,7 @@ local function checkKey()
 	else
 		currentAttempts = currentAttempts + 1
 		local remainingAttempts = maxAttempts - currentAttempts
+        print("Invalid key. Remaining attempts: " .. remainingAttempts)
 		if remainingAttempts > 0 then
 			showNotify("Invalid access key. " .. remainingAttempts .. " attempt(s) remaining.")
 		else
@@ -1178,11 +1208,19 @@ end
 
 keyInputBox.FocusLost:Connect(function(enterPressed)
 	if enterPressed then
+        print("KeyInputBox FocusLost event (Enter pressed).")
 		checkKey()
 	end
 end)
 
-keySubmitBtn.MouseButton1Click:Connect(checkKey)
+keySubmitBtn.MouseButton1Click:Connect(function()
+    print("KeySubmitBtn clicked.")
+    checkKey()
+end)
+
+keyInputBox:CaptureFocus()
+showNotify("Please authenticate your access key to proceed.")
+print("Script finished initial setup. Waiting for RunService.RenderStepped and loop.")
 
 RunService.RenderStepped:Connect(function(dt)
 	if aimbot and lockset and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -1245,11 +1283,13 @@ RunService.RenderStepped:Connect(function(dt)
 	end
 end)
 
-keyInputBox:CaptureFocus()
-showNotify("Please authenticate your access key to proceed.")
-
+-- Main loop for continuous updates
 while true do
 	wait(1)
-	if mainFrame.Visible and esp then updateHighlights() end
-	if esp3D then updateESP3DBoxes() end
+	-- Only update ESP/ESP3D if the main GUI frame is visible
+	-- This helps reduce unnecessary processing when the GUI is hidden
+	if mainFrame.Visible then
+		if esp then updateHighlights() end
+		if esp3D then updateESP3DBoxes() end
+	end
 end
