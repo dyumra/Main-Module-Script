@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: 2.19.1 - Authenticated Interface Edition ]] -- Updated Version
+-- [[ 📊 Version: 2.19.0 - Authenticated Interface Edition ]] -- Updated Version
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local Players = game:GetService("Players")
@@ -55,7 +55,8 @@ local AIMBOT_SWITCH_DISTANCE = 8
 local correctKey = "dyumra-k3b7-wp9d-a2n8"
 local maxAttempts = 3
 local currentAttempts = 0
--- time lifetime (random values, not truly functional for a real lifetime system)
+-- time lifetime
+-- (random values, not truly functional for a real lifetime system)
 local lifetimeWeeks = math.random(10000, 12222)
 local lifetimeDays = math.random(1, 31)
 local lifetimeHour = math.random(1, 60)
@@ -196,13 +197,13 @@ screenGui.ResetOnSpawn = false
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Parent = screenGui
-mainFrame.Size = UDim2.new(0, 260, 0, 635) -- Increased height for new buttons and reorganized layout
-mainFrame.Position = UDim2.new(0, 20, 0, 50)
+mainFrame.Size = UDim2.new(0, 600, 0, 400) -- Wider and shorter for the new UI
+mainFrame.Position = UDim2.new(0.5, -(mainFrame.Size.X.Offset / 2), 0.5, -(mainFrame.Size.Y.Offset / 2)) -- Center the frame
 mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 mainFrame.BackgroundTransparency = 0
 mainFrame.BorderSizePixel = 0
 mainFrame.ClipsDescendants = true
-mainFrame.AnchorPoint = Vector2.new(0,0)
+mainFrame.AnchorPoint = Vector2.new(0.5,0.5) -- Set AnchorPoint to center for easier positioning
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.Visible = false
@@ -218,6 +219,60 @@ local mainGradient = Instance.new("UIGradient", mainFrame)
 mainGradient.Color = ColorSequence.new(Color3.fromRGB(35, 35, 35), Color3.fromRGB(15, 15, 15))
 mainGradient.Transparency = NumberSequence.new(0.1, 0.1)
 mainGradient.Rotation = 90
+
+-- Title Bar
+local titleBar = Instance.new("Frame")
+titleBar.Parent = mainFrame
+titleBar.Size = UDim2.new(1, 0, 0, 30)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleBar.BorderSizePixel = 0
+titleBar.ZIndex = 2
+titleBar.Active = true
+titleBar.Draggable = true -- Make the title bar draggable
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Parent = titleBar
+titleLabel.Size = UDim2.new(0, 150, 1, 0)
+titleLabel.Position = UDim2.new(0.05, 0, 0, 0)
+titleLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 18
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Text = "DYHUB V3.02"
+
+-- Minimize Button
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Parent = titleBar
+minimizeBtn.Size = UDim2.new(0, 30, 1, 0)
+minimizeBtn.Position = UDim2.new(1, -60, 0, 0)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+minimizeBtn.BackgroundTransparency = 1
+minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeBtn.Font = Enum.Font.GothamBold
+minimizeBtn.TextSize = 20
+minimizeBtn.Text = "-"
+minimizeBtn.ZIndex = 3
+
+-- Close Button
+local closeBtn = Instance.new("TextButton")
+closeBtn.Parent = titleBar
+closeBtn.Size = UDim2.new(0, 30, 1, 0)
+closeBtn.Position = UDim2.new(1, -30, 0, 0)
+closeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+closeBtn.BackgroundTransparency = 1
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 18
+closeBtn.Text = "X"
+closeBtn.ZIndex = 3
+
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+end)
+
 
 local toggleBtn = Instance.new("TextButton", screenGui)
 toggleBtn.Size = UDim2.new(0, 60, 0, 30)
@@ -244,8 +299,8 @@ end)
 local function createHeader(text, yPos, parent)
 	local header = Instance.new("TextLabel")
 	header.Parent = parent
-	header.Size = UDim2.new(1, 0, 0, 25)
-	header.Position = UDim2.new(0, 0, 0, yPos)
+	header.Size = UDim2.new(0, 150, 0, 25) -- Adjusted width for left column
+	header.Position = UDim2.new(0, 5, 0, yPos) -- Start from left edge, padding
 	header.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	header.TextColor3 = Color3.fromRGB(255, 255, 255)
 	header.Font = Enum.Font.GothamBold
@@ -258,12 +313,12 @@ end
 local function createButton(name, pos, parent)
 	local btn = Instance.new("TextButton")
 	btn.Name = name
-	btn.Size = UDim2.new(0, 230, 0, 35)
+	btn.Size = UDim2.new(0, 140, 0, 35) -- Adjusted width for left column
 	btn.Position = pos
 	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	btn.TextColor3 = Color3.fromRGB(255,255,255)
 	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 18
+	btn.TextSize = 14 -- Slightly smaller text for more buttons
 	btn.Text = name .. ": Off"
 	btn.AnchorPoint = Vector2.new(0, 0)
 	btn.Parent = parent
@@ -281,12 +336,12 @@ end
 local function createTextBox(name, pos, parent, placeholder, initialValue, size)
 	local box = Instance.new("TextBox")
 	box.Name = name
-	box.Size = size or UDim2.new(0, 230, 0, 30)
+	box.Size = size or UDim2.new(0, 140, 0, 25) -- Adjusted width/height for left column
 	box.Position = pos
 	box.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	box.TextColor3 = Color3.fromRGB(200,200,200)
 	box.Font = Enum.Font.GothamBold
-	box.TextSize = 18
+	box.TextSize = 14
 	box.PlaceholderText = placeholder or ""
 	box.Text = tostring(initialValue or "")
 	box.ClearTextOnFocus = false
@@ -302,79 +357,101 @@ local function createTextBox(name, pos, parent, placeholder, initialValue, size)
 	return box
 end
 
--- GUI Elements Reorganized
-local currentY = 15
+-- GUI Elements Reorganized for Left Column
+local currentY = 40 -- Start below the title bar
 
-local combatHeader = createHeader("Combat Settings", currentY, mainFrame)
-currentY = currentY + combatHeader.Size.Y.Offset + 10
+-- DYHUB text at the bottom left
+local dyhubLabel = Instance.new("TextLabel")
+dyhubLabel.Parent = mainFrame
+dyhubLabel.Size = UDim2.new(0, 100, 0, 20)
+dyhubLabel.Position = UDim2.new(0, 5, 1, -25) -- Position at bottom-left
+dyhubLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+dyhubLabel.BackgroundTransparency = 1
+dyhubLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+dyhubLabel.Font = Enum.Font.GothamBold
+dyhubLabel.TextSize = 12
+dyhubLabel.TextXAlignment = Enum.TextXAlignment.Left
+dyhubLabel.Text = "DYHUB"
 
-local aimbotBtn = createButton("Aimbot", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + aimbotBtn.Size.Y.Offset + 10
+local leftColumnFrame = Instance.new("Frame")
+leftColumnFrame.Parent = mainFrame
+leftColumnFrame.Size = UDim2.new(0, 150, 1, -40) -- Fixed width, takes most of height
+leftColumnFrame.Position = UDim2.new(0, 0, 0, 30) -- Below title bar
+leftColumnFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+leftColumnFrame.BackgroundTransparency = 1
+leftColumnFrame.ClipsDescendants = true
 
-local lockBtn = createButton("Target Lock", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + lockBtn.Size.Y.Offset + 10
+local leftColumnLayout = Instance.new("UIListLayout", leftColumnFrame)
+leftColumnLayout.Padding = UDim.new(0, 5)
+leftColumnLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+leftColumnLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+leftColumnLayout.FillDirection = Enum.FillDirection.Vertical
+leftColumnLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local teleportLoopBtn = createButton("Teleport Loop", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + teleportLoopBtn.Size.Y.Offset + 20
+-- Combat Settings
+local combatHeader = createHeader("Combat", 0, leftColumnFrame) -- Layout handles Y
+combatHeader.LayoutOrder = 1
+local aimbotBtn = createButton("Aimbot", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+aimbotBtn.LayoutOrder = 2
+local lockBtn = createButton("Target Lock", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+lockBtn.LayoutOrder = 3
+local teleportLoopBtn = createButton("Teleport Loop", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+teleportLoopBtn.LayoutOrder = 4
 
-local visualHeader = createHeader("Visual Enhancements", currentY, mainFrame)
-currentY = currentY + visualHeader.Size.Y.Offset + 10
+-- Visual Enhancements
+local visualHeader = createHeader("Visuals", 0, leftColumnFrame)
+visualHeader.LayoutOrder = 5
+local espBtn = createButton("Player ESP", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+espBtn.LayoutOrder = 6
+local espTeamBtn = createButton("ESP Team Filter", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+espTeamBtn.LayoutOrder = 7
+local esp3DBtn = createButton("ESP 3D", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+esp3DBtn.LayoutOrder = 8
+local esp3DTeamBtn = createButton("ESP 3D Team Filter", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+esp3DTeamBtn.LayoutOrder = 9
 
-local espBtn = createButton("Player ESP", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + espBtn.Size.Y.Offset + 10
+-- Hitbox Modifiers
+local hitboxHeader = createHeader("Hitbox", 0, leftColumnFrame)
+hitboxHeader.LayoutOrder = 10
+local hitboxBtn = createButton("Hitbox Enhance", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+hitboxBtn.LayoutOrder = 11
 
-local espTeamBtn = createButton("Player ESP: Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + espTeamBtn.Size.Y.Offset + 10
-
-local esp3DBtn = createButton("ESP 3D", UDim2.new(0, 15, 0, currentY), mainFrame) -- New ESP 3D button
-currentY = currentY + esp3DBtn.Size.Y.Offset + 10
-
-local esp3DTeamBtn = createButton("ESP 3D: Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame) -- New ESP 3D Team filter button
-currentY = currentY + esp3DTeamBtn.Size.Y.Offset + 20
-
-local hitboxHeader = createHeader("Hitbox Modifiers", currentY, mainFrame)
-currentY = currentY + hitboxHeader.Size.Y.Offset + 10
-
-local hitboxBtn = createButton("Hitbox Enhancement", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + hitboxBtn.Size.Y.Offset + 5
-
--- Horizontal layout for hitbox inputs
+-- Input Frame for Hitbox (horizontal layout within left column)
 local hitboxInputFrame = Instance.new("Frame")
-hitboxInputFrame.Parent = mainFrame
-hitboxInputFrame.Size = UDim2.new(0, 230, 0, 30)
-hitboxInputFrame.Position = UDim2.new(0, 15, 0, currentY)
+hitboxInputFrame.Parent = leftColumnFrame
+hitboxInputFrame.Size = UDim2.new(0, 140, 0, 30) -- Fixed size
 hitboxInputFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 hitboxInputFrame.BackgroundTransparency = 1
-currentY = currentY + hitboxInputFrame.Size.Y.Offset + 5
+hitboxInputFrame.LayoutOrder = 12
 
-local hitboxInput = createTextBox("HitboxSizeInput", UDim2.new(0, 0, 0, 0), hitboxInputFrame, "Hitbox Size (0-300)", hitboxSize, UDim2.new(0, 110, 0, 30))
-local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", UDim2.new(0, 120, 0, 0), hitboxInputFrame, "Trans. (0.0-1.0)", hitboxTransparency, UDim2.new(0, 110, 0, 30))
+local hitboxInputLayout = Instance.new("UIListLayout", hitboxInputFrame)
+hitboxInputLayout.Padding = UDim.new(0, 5)
+hitboxInputLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+hitboxInputLayout.FillDirection = Enum.FillDirection.Horizontal
+hitboxInputLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local teamCheckHitboxBtn = createButton("Hitbox Team Filter", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + teamCheckHitboxBtn.Size.Y.Offset + 20
+local hitboxInput = createTextBox("HitboxSizeInput", UDim2.new(0, 0, 0, 0), hitboxInputFrame, "Size", hitboxSize, UDim2.new(0, 65, 0, 25))
+hitboxInput.LayoutOrder = 1
+local hitboxTransparencyInput = createTextBox("HitboxTransparencyInput", UDim2.new(0, 0, 0, 0), hitboxInputFrame, "Trans", hitboxTransparency, UDim2.new(0, 65, 0, 25))
+hitboxTransparencyInput.LayoutOrder = 2
 
-local MiscHeader = createHeader("Misc Enhancements", currentY, mainFrame)
-currentY = currentY + MiscHeader.Size.Y.Offset + 10
+local teamCheckHitboxBtn = createButton("Hitbox Team Filter", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+teamCheckHitboxBtn.LayoutOrder = 13
 
-local headlessBtn = createButton("Headless", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + headlessBtn.Size.Y.Offset + 10
-
-local noclipBtn = createButton("Noclip", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + noclipBtn.Size.Y.Offset + 10
+-- Misc Enhancements
+local MiscHeader = createHeader("Misc", 0, leftColumnFrame)
+MiscHeader.LayoutOrder = 14
+local headlessBtn = createButton("Headless", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+headlessBtn.LayoutOrder = 15
+local noclipBtn = createButton("Noclip", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+noclipBtn.LayoutOrder = 16
 
 -- New: Speed Button and Input
-local speedBtn = createButton("Speed", UDim2.new(0, 15, 0, currentY), mainFrame)
-currentY = currentY + speedBtn.Size.Y.Offset + 5
+local speedBtn = createButton("Speed", UDim2.new(0, 0, 0, 0), leftColumnFrame)
+speedBtn.LayoutOrder = 17
 
-local speedInputFrame = Instance.new("Frame")
-speedInputFrame.Parent = mainFrame
-speedInputFrame.Size = UDim2.new(0, 230, 0, 30)
-speedInputFrame.Position = UDim2.new(0, 15, 0, currentY)
-speedInputFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-speedInputFrame.BackgroundTransparency = 1
-currentY = currentY + speedInputFrame.Size.Y.Offset + 5
-
-local speedInputTextBox = createTextBox("SpeedInput", UDim2.new(0, 0, 0, 0), speedInputFrame, "Speed (e.g. 50)", flyNoclipSpeed, UDim2.new(0, 230, 0, 30))
+local speedInputTextBox = createTextBox("SpeedInput", UDim2.new(0, 0, 0, 0), leftColumnFrame, "Speed (e.g. 50)", flyNoclipSpeed, UDim2.new(0, 140, 0, 25))
+speedInputTextBox.LayoutOrder = 18
 
 
 local highlights = {}
@@ -544,14 +621,14 @@ local function getRandomLivingTarget()
 		return validTargets[math.random(1, #validTargets)]
 	end
 	return nil
-}
+end
 
 local function applyHitboxToPlayer(p)
 	if hitbox and p ~= player and p.Character then
 		if teamCheckHitbox and player.Team and p.Team and p.Team == player.Team then
 			resetHitboxesForPlayer(p)
 			return
-		}
+		end
 
 		local part = p.Character:FindFirstChild("HumanoidRootPart")
 		if part then
@@ -574,7 +651,7 @@ local function updateHitboxes()
 	for _, p in pairs(Players:GetPlayers()) do
 		applyHitboxToPlayer(p)
 	end
-}
+end
 
 local function resetHitboxesForPlayer(p)
 	if p ~= player and p.Character then
@@ -600,7 +677,7 @@ local function resetAllHitboxes()
 	for _, p in pairs(Players:GetPlayers()) do
 		resetHitboxesForPlayer(p)
 	end
-}
+end
 
 local function performTeleport(plr)
 	if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
@@ -888,7 +965,6 @@ speedBtn.MouseButton1Click:Connect(function()
             flyNoclipSpeed = lastValidSpeed
             speedInputTextBox.Text = tostring(lastValidSpeed)
         end
-
         -- Start Speed movement
         if speedConnection then
             speedConnection:Disconnect()
@@ -991,7 +1067,7 @@ local function checkKey()
 		mainFrame.Visible = true
 		toggleBtn.Visible = true
 		setupGUIAndDefaults()
-		showNotify("Access Granted. Key lifetime: " .. lifetimeWeeks .. " attempt(Weeks), (Days: " .. lifetimeDays .. "), (Hour: " .. lifetimeHour .. "), (Sec: " .. lifetimeSec .. ") remaining.")
+		showNotify("Access Granted. Key lifetime: Timeout! - attempt(Weeks: " .. lifetimeWeeks .. "), (Days: " .. lifetimeDays .. "), (Hour: " .. lifetimeHour .. "), (Sec: " .. lifetimeSec .. ") remaining.")
 		wait(0.5)
 		showNotify("Access granted. Main interface now available.")
 	else
@@ -1039,7 +1115,7 @@ RunService.RenderStepped:Connect(function(dt)
 		end
 	else
 		currentAimbotTarget = nil
-	}
+	end
 
 	if killAll then
 		handleTeleportLoop(dt)
@@ -1071,7 +1147,7 @@ RunService.RenderStepped:Connect(function(dt)
 			head.Transparency = 1
 		end
 		if face and face.Transparency < 1 then
-			originalFaceTransparency = face.Transparency
+			face.Transparency = originalFaceTransparency
 			face.Transparency = 1
 		end
 	end
