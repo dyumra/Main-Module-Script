@@ -497,62 +497,202 @@ end)
 
 ----------------- COMBAT TAB -----------------
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local StarterGui = game:GetService("StarterGui")
 
-local combatFrame = tabFrames["COMBAT"]
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
 
--- Aimbot Setting Label
-local aimbotLabel = Instance.new("TextLabel")
-aimbotLabel.Text = "👁 Aimbot Settings:"
-aimbotLabel.Size = UDim2.new(0, 300, 0, 40)
-aimbotLabel.Position = UDim2.new(0, 20, 0, 10)
-aimbotLabel.BackgroundTransparency = 1
-aimbotLabel.TextColor3 = Color3.new(1,1,1)
-aimbotLabel.Font = Enum.Font.GothamBold
-aimbotLabel.TextSize = 24
-aimbotLabel.TextXAlignment = Enum.TextXAlignment.Left
-aimbotLabel.Parent = combatFrame
-styleLabel(aimbotLabel)
-
+-- Settings
 local aimbotEnabled = false
 local targetSetEnabled = false
+local wallHackEnabled = false
+local aimbotSafeEnabled = false
+local lockWhoEnabled = false
 local targetName = ""
 local targetLockIndex = 1
-local targetLockOptions = {"HumanoidRootPart", "Head", "Torso", "UpperTorso"}
+local targetLockOptions = {"Not Set", "HumanoidRootPart", "Head", "Torso", "UpperTorso"}
+local lockedTarget = nil
+local safeDistance = 6
+local highlightObject = nil
 
--- Aimbot Toggle Button
-local aimbotToggleBtn = Instance.new("TextButton")
-aimbotToggleBtn.Text = "🎯 Aimbot: OFF"
-aimbotToggleBtn.Size = UDim2.new(0, 160, 0, 40)
-aimbotToggleBtn.Position = UDim2.new(0, 20, 0, 60)
-aimbotToggleBtn.Parent = combatFrame
-styleButton(aimbotToggleBtn)
+-- GUI Parent
+local combatFrame = tabFrames["COMBAT"]
 
--- Target Set Toggle Button
-local targetSetBtn = Instance.new("TextButton")
-targetSetBtn.Text = "🎯 Target Set: OFF"
-targetSetBtn.Size = UDim2.new(0, 160, 0, 40)
-targetSetBtn.Position = UDim2.new(0, 190, 0, 60)
-targetSetBtn.Parent = combatFrame
-styleButton(targetSetBtn)
+-- Utility Functions
+local function isEnemy(plr)
+	if not plr or not plr.Character or plr == player then return false end
+	if plr.Team and player.Team and plr.Team == player.Team then return false end
+	if not plr.Character:FindFirstChild("HumanoidRootPart") then return false end
+	return true
+end
 
--- Target Lock Button
-local targetLockBtn = Instance.new("TextButton")
-targetLockBtn.Text = "🎯 Target Lock: Not Set"
-targetLockBtn.Size = UDim2.new(0, 200, 0, 40)
-targetLockBtn.Position = UDim2.new(0, 370, 0, 60)
-targetLockBtn.Parent = combatFrame
-styleButton(targetLockBtn)
+local function isWallBlocking(targetPart)
+	local origin = player.Character and player.Character:FindFirstChild("Head")
+	if not origin or not targetPart then return true end
 
--- Target Name TextBox
+	local result = Workspace:Raycast(origin.Position, (targetPart.Position - origin.Position).Unit * 500, RaycastParams.new())
+	if result and result.Instance and not targetPart:IsDescendantOf(result.Instance.Parent) then
+		return true
+	end
+	return false
+end
+
+local function getClosestEnemy()
+	local closest = nil
+	local shortestDist = math.huge
+	local myHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if not myHRP then return nil end
+
+	for _, plr in pairs(Players:GetPlayers()) do
+		if isEnemy(plr) then
+			local part = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+			if part then
+				local dist = (part.Position - myHRP.Position).Magnitude
+				if dist < shortestDist then
+					closest = plr
+					shortestDist = dist
+				end
+			end
+		end
+	end
+	return closest
+end
+
+-- Highlight Target
+local function updateHighlight(target)
+	if highlightObject then
+		highlightObject:Destroy()
+		highlightObject = nil
+	end
+
+	if lockWhoEnabled and target and target.Character then
+		highlightObject = Instance.new("Highlight")
+		highlightObject.FillColor = Color3.fromRGB(255, 0, 0)
+		highlightObject.OutlineColor = Color3.fromRGB(255, 0, 0)
+		highlightObject.FillTransparency = 0.3
+		highlightObject.OutlineTransparency = 0
+		highlightObject.Adornee = target.Character
+		highlightObject.Parent = target.Character
+	end
+end
+
+-- Aimbot Logic
+RunService.RenderStepped:Connect(function()
+	if not aimbotEnabled or not player.Character then return end
+	local myHRP = player.Character:FindFirstChild("HumanoidRootPart")
+	if not myHRP then return end
+
+	-- Target Set Mode
+	if targetSetEnabled and targetName ~= "" then
+		for _, plr in pairs(Players:GetPlayers()) do
+			if isEnemy(plr) and plr.Name:lower():find(targetName:lower()) then
+				lockedTarget = plr
+				break
+			end
+		end
+	else
+		-- Auto Target Mode
+		if not lockedTarget or not lockedTarget.Character or not lockedTarget.Character:FindFirstChild("HumanoidRootPart") then
+			lockedTarget = getClosestEnemy()
+		end
+	end
+
+	-- Validate lockedTarget
+	if lockedTarget and lockedTarget.Character and lockedTarget.Character:FindFirstChild("HumanoidRootPart") then
+		local lockPart = lockedTarget.Character:FindFirstChild(targetLockOptions[targetLockIndex])
+		if not lockPart then lockPart = lockedTarget.Character:FindFirstChild("HumanoidRootPart") end
+
+		-- Check wall hack
+		if wallHackEnabled and isWallBlocking(lockPart) then
+			lockedTarget = nil
+			updateHighlight(nil)
+			return
+		end
+
+		-- Safe Mode
+		local distance = (lockPart.Position - myHRP.Position).Magnitude
+		if aimbotSafeEnabled and distance < safeDistance then
+			lockedTarget = nil
+			updateHighlight(nil)
+			return
+		end
+
+		-- Aimbot rotate
+		local direction = (lockPart.Position - myHRP.Position).Unit
+		local newCF = CFrame.new(myHRP.Position, myHRP.Position + direction)
+		myHRP.CFrame = myHRP.CFrame:Lerp(newCF, 0.3)
+		updateHighlight(lockedTarget)
+	else
+		lockedTarget = nil
+		updateHighlight(nil)
+	end
+end)
+
+-- GUI Buttons
+local function styleButton(btn)
+	btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 18
+	btn.BorderSizePixel = 0
+	local corner = Instance.new("UICorner", btn)
+	corner.CornerRadius = UDim.new(0, 10)
+end
+
+local function createToggleButton(text, pos, callback)
+	local btn = Instance.new("TextButton")
+	btn.Text = text .. ": OFF"
+	btn.Size = UDim2.new(0, 160, 0, 40)
+	btn.Position = pos
+	btn.Parent = combatFrame
+	styleButton(btn)
+
+	btn.MouseButton1Click:Connect(function()
+		local state = callback()
+		btn.Text = text .. ": " .. (state and "ON" or "OFF")
+	end)
+end
+
+-- Buttons for toggles
+createToggleButton("🎯 Aimbot", UDim2.new(0, 20, 0, 60), function()
+	aimbotEnabled = not aimbotEnabled
+	return aimbotEnabled
+end)
+
+createToggleButton("🎯 Target Set", UDim2.new(0, 190, 0, 60), function()
+	targetSetEnabled = not targetSetEnabled
+	return targetSetEnabled
+end)
+
+createToggleButton("🎯 Target Lock", UDim2.new(0, 370, 0, 60), function()
+	targetLockIndex = (targetLockIndex % #targetLockOptions) + 1
+	return true
+end)
+
+createToggleButton("🧱 Wall Hack", UDim2.new(0, 20, 0, 110), function()
+	wallHackEnabled = not wallHackEnabled
+	return wallHackEnabled
+end)
+
+createToggleButton("🛡 Aimbot Safe", UDim2.new(0, 190, 0, 110), function()
+	aimbotSafeEnabled = not aimbotSafeEnabled
+	return aimbotSafeEnabled
+end)
+
+createToggleButton("🔍 Lock Who", UDim2.new(0, 370, 0, 110), function()
+	lockWhoEnabled = not lockWhoEnabled
+	return lockWhoEnabled
+end)
+
+-- Target Name Box
 local targetNameBox = Instance.new("TextBox")
 targetNameBox.PlaceholderText = "Enter target name"
 targetNameBox.Size = UDim2.new(0, 330, 0, 40)
-targetNameBox.Position = UDim2.new(0, 20, 0, 110)
+targetNameBox.Position = UDim2.new(0, 20, 0, 160)
 targetNameBox.ClearTextOnFocus = false
-targetNameBox.Visible = false
+targetNameBox.Visible = true
 targetNameBox.Text = ""
 targetNameBox.Parent = combatFrame
 targetNameBox.Font = Enum.Font.GothamBold
@@ -562,32 +702,8 @@ targetNameBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 local tboxCorner = Instance.new("UICorner", targetNameBox)
 tboxCorner.CornerRadius = UDim.new(0, 12)
 
--- Events --
-aimbotToggleBtn.MouseButton1Click:Connect(function()
-	aimbotEnabled = not aimbotEnabled
-	aimbotToggleBtn.Text = "🎯 Aimbot: " .. (aimbotEnabled and "ON" or "OFF")
-	StarterGui:SetCore("SendNotification", {
-		Title = "DYHUB",
-		Text = "Aimbot has been turned " .. (aimbotEnabled and "On" or "Off") .. ".",
-		Duration = 3
-	})
-end)
-
-targetSetBtn.MouseButton1Click:Connect(function()
-	targetSetEnabled = not targetSetEnabled
-	targetSetBtn.Text = "🎯 Target Set: " .. (targetSetEnabled and "ON" or "OFF")
-	targetNameBox.Visible = targetSetEnabled
-	StarterGui:SetCore("SendNotification", {
-		Title = "DYHUB",
-		Text = targetSetEnabled and
-			"Target Set enabled. Will lock to target name." or
-			"Target Set disabled. Using default closest target lock.",
-		Duration = 3
-	})
-end)
-
-targetNameBox.FocusLost:Connect(function(enterPressed)
-	if enterPressed then
+targetNameBox.FocusLost:Connect(function(enter)
+	if enter then
 		targetName = targetNameBox.Text
 		StarterGui:SetCore("SendNotification", {
 			Title = "DYHUB",
@@ -596,90 +712,6 @@ targetNameBox.FocusLost:Connect(function(enterPressed)
 		})
 	end
 end)
-
-targetLockBtn.MouseButton1Click:Connect(function()
-	targetLockIndex = targetLockIndex % #targetLockOptions + 1
-	targetLockBtn.Text = "🎯 Target Lock: " .. targetLockOptions[targetLockIndex]
-end)
-
--- Function หาเป้าหมายที่ใกล้ที่สุด หรือที่กำหนดชื่อ --
-local function findTarget()
-	local closestEnemy = nil
-	local closestDistance = math.huge
-	local playerChar = player.Character
-	local playerHRP = playerChar and playerChar:FindFirstChild("HumanoidRootPart")
-	if not playerHRP then return nil end
-
-	local function isEnemy(plr)
-		if not plr or not plr.Character then return false end
-		if plr == player then return false end
-		if plr.Team and player.Team and plr.Team == player.Team then return false end
-		if not plr.Character:FindFirstChild("HumanoidRootPart") then return false end
-		return true
-	end
-
-	local enemies = {}
-	for _, plr in pairs(Players:GetPlayers()) do
-		if isEnemy(plr) then
-			table.insert(enemies, plr)
-		end
-	end
-
-	if targetSetEnabled and targetName ~= "" then
-		for _, plr in pairs(enemies) do
-			if plr.Name:lower():find(targetName:lower()) then
-				return plr
-			end
-		end
-		return nil
-	end
-
-	for _, plr in pairs(enemies) do
-		local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-		if hrp then
-			local dist = (hrp.Position - playerHRP.Position).Magnitude
-			if dist < closestDistance and dist <= 10 then
-				closestDistance = dist
-				closestEnemy = plr
-			end
-		end
-	end
-	return closestEnemy
-end
-
--- Main Aimbot Update Loop --
-RunService.RenderStepped:Connect(function()
-	if aimbotEnabled and player.Character then
-		local target = findTarget()
-		if target and target.Character then
-			local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-			if not hrp then return end
-
-			local lockPartName = targetLockOptions[targetLockIndex]
-			local targetPart = nil
-
-			if lockPartName == "Not Set" then
-				-- เริ่มจาก HumanoidRootPart เป็นค่าเริ่มต้น
-				targetPart = target.Character:FindFirstChild("HumanoidRootPart")
-			else
-				-- หาส่วนตามที่เลือก
-				targetPart = target.Character:FindFirstChild(lockPartName)
-				if not targetPart then
-					-- fallback ถ้าไม่มีชิ้นส่วน เลือก HumanoidRootPart แทน
-					targetPart = target.Character:FindFirstChild("HumanoidRootPart")
-				end
-			end
-
-			if targetPart then
-				local currentCFrame = hrp.CFrame
-				local lookVector = (targetPart.Position - hrp.Position).Unit
-				local targetCFrame = CFrame.new(hrp.Position, hrp.Position + lookVector)
-				hrp.CFrame = currentCFrame:Lerp(targetCFrame, 0.1)
-			end
-		end
-	end
-end)
-
 
 ----------------- MISC TAB -----------------
 local player = Players.LocalPlayer
