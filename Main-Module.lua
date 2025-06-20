@@ -496,6 +496,7 @@ end)
 
 
 ----------------- COMBAT TAB -----------------
+-- Required Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -505,12 +506,12 @@ local Camera = Workspace.CurrentCamera
 local localPlayer = Players.LocalPlayer
 
 -- Settings
-local camlockEnabled = false
-local targetSetEnabled = false
-local wallHackEnabled = false
-local aimbotSafeEnabled = false
-local lockWhoEnabled = false
-local smoothCamEnabled = false
+_G.camlockEnabled = false
+_G.targetSetEnabled = false
+_G.wallHackEnabled = false
+_G.aimbotSafeEnabled = false
+_G.lockWhoEnabled = false
+_G.smoothCamEnabled = false
 local targetLockIndex = 1
 local targetLockOptions = {"HumanoidRootPart", "Head", "Torso", "UpperTorso"}
 local targetName = ""
@@ -566,7 +567,7 @@ local function updateHighlight(target)
 		highlightObject:Destroy()
 		highlightObject = nil
 	end
-	if lockWhoEnabled and target and target.Character then
+	if _G.lockWhoEnabled and target and target.Character then
 		highlightObject = Instance.new("Highlight")
 		highlightObject.FillColor = Color3.fromRGB(255, 0, 0)
 		highlightObject.OutlineColor = Color3.fromRGB(255, 0, 0)
@@ -582,50 +583,43 @@ RunService.RenderStepped:Connect(function(dt)
 	local character = localPlayer.Character
 	local rootPart = character and character:FindFirstChild("HumanoidRootPart")
 	local head = character and character:FindFirstChild("Head")
-	if not camlockEnabled or not rootPart or not head then return end
+	if not _G.camlockEnabled or not rootPart or not head then return end
 
-	if targetSetEnabled and targetName ~= "" then
+	-- Find or keep target
+	if _G.targetSetEnabled and targetName ~= "" then
 		for _, plr in pairs(Players:GetPlayers()) do
 			if isEnemy(plr) and plr.Name:lower():find(targetName:lower()) then
 				lockedTarget = plr
 				break
 			end
 		end
-	else
-		if not lockedTarget or not lockedTarget.Character or not lockedTarget.Character:FindFirstChild("HumanoidRootPart") then
-			lockedTarget = getClosestTarget()
-		end
+	elseif not lockedTarget or not lockedTarget.Character or not lockedTarget.Character:FindFirstChild("HumanoidRootPart") then
+		lockedTarget = getClosestTarget()
 	end
 
+	-- Process lock
 	if lockedTarget and lockedTarget.Character then
-		local partName = targetLockOptions[targetLockIndex]
-		local torso = lockedTarget.Character:FindFirstChild(partName) or lockedTarget.Character:FindFirstChild("HumanoidRootPart")
-		if torso then
-			if wallHackEnabled and isWallBlocking(torso) then
-				lockedTarget = nil
-				updateHighlight(nil)
-				return
-			end
+		local lockPartName = targetLockOptions[targetLockIndex]
+		local lockPart = lockedTarget.Character:FindFirstChild(lockPartName)
+		if not lockPart then lockPart = lockedTarget.Character:FindFirstChild("HumanoidRootPart") end
 
-			local dist = (torso.Position - rootPart.Position).Magnitude
-			if aimbotSafeEnabled and dist < safeDistance then
-				lockedTarget = nil
-				updateHighlight(nil)
-				return
-			end
-
-			local camCFrame = Camera.CFrame
-			local direction = (torso.Position - camCFrame.Position).Unit
-			local desiredCF = CFrame.new(camCFrame.Position, camCFrame.Position + direction)
-
-			if smoothCamEnabled then
-				Camera.CFrame = camCFrame:Lerp(desiredCF, 0.1)
-			else
-				Camera.CFrame = desiredCF
-			end
-
-			updateHighlight(lockedTarget)
+		-- Conditions to unlock
+		if not lockPart or
+			_G.wallHackEnabled and isWallBlocking(lockPart) or
+			_G.aimbotSafeEnabled and (lockPart.Position - rootPart.Position).Magnitude < safeDistance
+		then
+			lockedTarget = nil
+			updateHighlight(nil)
+			return
 		end
+
+		-- Aim
+		local camCFrame = Camera.CFrame
+		local direction = (lockPart.Position - camCFrame.Position).Unit
+		local desiredCF = CFrame.new(camCFrame.Position, camCFrame.Position + direction)
+		Camera.CFrame = _G.smoothCamEnabled and camCFrame:Lerp(desiredCF, 0.1) or desiredCF
+
+		updateHighlight(lockedTarget)
 	else
 		lockedTarget = nil
 		updateHighlight(nil)
@@ -665,19 +659,6 @@ createToggleButton("🛡 Safe Mode", UDim2.new(0, 190, 0, 110), "aimbotSafeEnabl
 createToggleButton("🔍 Lock Who", UDim2.new(0, 360, 0, 60), "lockWhoEnabled")
 createToggleButton("🌀 Smooth Cam", UDim2.new(0, 360, 0, 110), "smoothCamEnabled")
 
--- Target Lock Part Button
-local targetLockBtn = Instance.new("TextButton")
-targetLockBtn.Text = "🎯 Target Lock: " .. targetLockOptions[targetLockIndex]
-targetLockBtn.Size = UDim2.new(0, 200, 0, 40)
-targetLockBtn.Position = UDim2.new(0, 530, 0, 60)
-targetLockBtn.Parent = combatFrame
-styleButton(targetLockBtn)
-
-targetLockBtn.MouseButton1Click:Connect(function()
-	targetLockIndex = targetLockIndex % #targetLockOptions + 1
-	targetLockBtn.Text = "🎯 Target Lock: " .. targetLockOptions[targetLockIndex]
-end)
-
 -- Target Name Input
 local targetNameBox = Instance.new("TextBox")
 targetNameBox.PlaceholderText = "Enter target name"
@@ -704,6 +685,20 @@ targetNameBox.FocusLost:Connect(function(enter)
 		})
 	end
 end)
+
+-- Target Lock Button
+local targetLockBtn = Instance.new("TextButton")
+targetLockBtn.Text = "🎯 Target Lock: " .. targetLockOptions[targetLockIndex]
+targetLockBtn.Size = UDim2.new(0, 200, 0, 40)
+targetLockBtn.Position = UDim2.new(0, 530, 0, 60)
+targetLockBtn.Parent = combatFrame
+styleButton(targetLockBtn)
+
+targetLockBtn.MouseButton1Click:Connect(function()
+	targetLockIndex = targetLockIndex % #targetLockOptions + 1
+	targetLockBtn.Text = "🎯 Target Lock: " .. targetLockOptions[targetLockIndex]
+end)
+
 
 
 ----------------- MISC TAB -----------------
