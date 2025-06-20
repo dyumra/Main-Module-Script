@@ -6,7 +6,7 @@
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local sigma = false
-local correctKey = "dyumra-b6n1-qz0m-t4v6"
+local correctKey = "dyumra-k3b7-wp9d-a2n8"
 local maxAttempts = 3
 local currentAttempts = 0
 local lifetimeWeeks = math.random(10000, 12222)
@@ -25,7 +25,7 @@ local StarterGui = game:GetService("StarterGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DYHUB | Version: x8f729ef283p912v | User: DYHUBGROUP | @dyumra, Support! | .gg/DYHUBGG"
+screenGui.Name = "DYHUB | Version: x8f729ef283p912v | User: DYHUBGROUP | Dex, Support! | .gg/DYHUBGG"
 screenGui.Parent = playerGui
 screenGui.ResetOnSpawn = false
 
@@ -333,7 +333,7 @@ for _, name in ipairs(tabNames) do
 	tabFrame.Visible = false
 	tabFrame.Parent = contentFrame
 	tabFrames[name] = tabFrame
-	
+
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 12)
 	corner.Parent = tabFrame
@@ -496,6 +496,11 @@ end)
 
 
 ----------------- COMBAT TAB -----------------
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
 local combatFrame = tabFrames["COMBAT"]
 
 -- Aimbot Setting Label
@@ -622,7 +627,7 @@ local function findTarget()
 
 	if targetSetEnabled and targetName ~= "" then
 		for _, plr in pairs(enemies) do
-			if plr.Name:lower():find(targetName:lower()) then  -- แก้ตรงนี้ให้ค้นหาแบบ partial match
+			if plr.Name:lower():find(targetName:lower()) then
 				return plr
 			end
 		end
