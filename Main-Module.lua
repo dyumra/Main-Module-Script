@@ -2,7 +2,7 @@
 
 -- [[ ⚙️ Roblox Execution Module ]]
 -- [[ 🔮 Powered by Dyumra's Innovations ]]
--- [[ 📊 Version: x8f729ef283p912v - Authenticated Interface Edition ]] -- Updated Version
+-- [[ 📊 Version: x8f729ef283p912v - Authenticated Interface Edition ]] -- Updated Version v1723
 -- [[ 🔗 Other Script : https://github.com/dyumra - Thank for Support ]]
 
 local sigma = false
@@ -512,20 +512,35 @@ _G.wallHackEnabled = false
 _G.aimbotSafeEnabled = false
 _G.lockWhoEnabled = false
 _G.smoothCamEnabled = false
+_G.checkTeamEnabled = true
+
 local targetLockIndex = 1
-local targetLockOptions = {"HumanoidRootPart", "Head", "Torso", "UpperTorso"}
+local targetLockOptions = {"Not Set", "Head", "Torso", "UpperTorso", "HumanoidRootPart"}
 local targetName = ""
 local lockedTarget = nil
-local safeDistance = 6
+local safeDistance = 8
 local highlightObject = nil
 
 -- GUI (assumes tabFrames["COMBAT"] exists)
 local combatFrame = tabFrames["COMBAT"]
 
+-- Title
+local player1SettingLabel = Instance.new("TextLabel")
+player1SettingLabel.Text = "👁 Aimbot Settings:"
+player1SettingLabel.Size = UDim2.new(0, 300, 0, 40)
+player1SettingLabel.Position = UDim2.new(0, 20, 0, 10)
+player1SettingLabel.BackgroundTransparency = 1
+player1SettingLabel.TextColor3 = Color3.new(1, 1, 1)
+player1SettingLabel.Font = Enum.Font.GothamBold
+player1SettingLabel.TextSize = 24
+player1SettingLabel.TextXAlignment = Enum.TextXAlignment.Left
+player1SettingLabel.Parent = combatFrame
+styleLabel(player1SettingLabel)
+
 -- Helper Functions
 local function isEnemy(plr)
 	if not plr or not plr.Character or plr == localPlayer then return false end
-	if plr.Team and localPlayer.Team and plr.Team == localPlayer.Team then return false end
+	if _G.checkTeamEnabled and plr.Team and localPlayer.Team and plr.Team == localPlayer.Team then return false end
 	if not plr.Character:FindFirstChild("HumanoidRootPart") then return false end
 	return true
 end
@@ -652,24 +667,25 @@ local function createToggleButton(text, pos, toggleVarName)
 end
 
 -- Buttons
-createToggleButton("🎯 Camlock", UDim2.new(0, 20, 0, 60), "camlockEnabled")
+createToggleButton("🎯 Aimlock", UDim2.new(0, 20, 0, 60), "camlockEnabled")
 createToggleButton("🎯 Target Set", UDim2.new(0, 190, 0, 60), "targetSetEnabled")
 createToggleButton("🧱 Wall Hack", UDim2.new(0, 20, 0, 110), "wallHackEnabled")
 createToggleButton("🛡 Safe Mode", UDim2.new(0, 190, 0, 110), "aimbotSafeEnabled")
 createToggleButton("🔍 Lock Who", UDim2.new(0, 360, 0, 60), "lockWhoEnabled")
 createToggleButton("🌀 Smooth Cam", UDim2.new(0, 360, 0, 110), "smoothCamEnabled")
+createToggleButton("👥 Check Team", UDim2.new(0, 20, 0, 170), "checkTeamEnabled")
 
 -- Target Name Input
 local targetNameBox = Instance.new("TextBox")
-targetNameBox.PlaceholderText = "Enter target name"
-targetNameBox.Size = UDim2.new(0, 330, 0, 40)
-targetNameBox.Position = UDim2.new(0, 20, 0, 160)
+targetNameBox.PlaceholderText = "Enter target name & 🎯 Target Set: On"
+targetNameBox.Size = UDim2.new(0, 360, 0, 40)
+targetNameBox.Position = UDim2.new(0, 20, 0, 230)
 targetNameBox.ClearTextOnFocus = false
 targetNameBox.Visible = true
 targetNameBox.Text = ""
 targetNameBox.Parent = combatFrame
 targetNameBox.Font = Enum.Font.GothamBold
-targetNameBox.TextSize = 18
+targetNameBox.TextSize = 15
 targetNameBox.TextColor3 = Color3.new(1,1,1)
 targetNameBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 local tboxCorner = Instance.new("UICorner", targetNameBox)
@@ -690,7 +706,7 @@ end)
 local targetLockBtn = Instance.new("TextButton")
 targetLockBtn.Text = "🎯 Target Lock: " .. targetLockOptions[targetLockIndex]
 targetLockBtn.Size = UDim2.new(0, 200, 0, 40)
-targetLockBtn.Position = UDim2.new(0, 530, 0, 60)
+targetLockBtn.Position = UDim2.new(0, 190, 0, 170)
 targetLockBtn.Parent = combatFrame
 styleButton(targetLockBtn)
 
@@ -698,7 +714,6 @@ targetLockBtn.MouseButton1Click:Connect(function()
 	targetLockIndex = targetLockIndex % #targetLockOptions + 1
 	targetLockBtn.Text = "🎯 Target Lock: " .. targetLockOptions[targetLockIndex]
 end)
-
 
 
 ----------------- MISC TAB -----------------
@@ -1520,6 +1535,7 @@ local function setupGUIAndDefaults()
 	print("Print!!")
 end
 
+
 local function checkKey()
 	local enteredKey = keyInputBox.Text:lower()
 	if enteredKey == correctKey or enteredKey == "dev" then
@@ -1544,7 +1560,10 @@ local function checkKey()
 			showNotify("Invalid access key. " .. remainingAttempts .. " attempt(s) remaining.")
 		else
 			showNotify("Multiple invalid attempts. Access denied.")
-			kickPlayer("Access to this script has been suspended. (Error Code: Key_Denied_003)")
+			wait(2)
+			showNotify("We are in the process of removing your DataModel from the game.")
+			wait(2)
+			player:kick("Access to this script has been suspended. (Error Code: Key_Denied_003)")
 		end
 	end
 end
